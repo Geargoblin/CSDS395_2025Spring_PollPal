@@ -8,3 +8,8 @@ Step 3: run "npm install" to install all the dependencies
 Step 4: run "npm start' to start the project
 
 email or text me(Parv) for any questions!
+
+Bugs found out so far:
+ 1. The navbar was showing up twice on the Home page. Status: fixed
+ 2. Show button not working on the signup page. Status: not fixed
+ 3. 
