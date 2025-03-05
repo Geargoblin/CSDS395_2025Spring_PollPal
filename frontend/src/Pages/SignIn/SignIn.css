@@ -45,7 +45,7 @@
   }
   
   .show-password-btn {
-    position: absolute;
+    position: relative;
     right: 10px;
     background: none;
     border: none;

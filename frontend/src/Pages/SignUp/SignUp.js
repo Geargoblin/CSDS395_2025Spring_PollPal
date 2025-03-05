@@ -21,6 +21,12 @@ const SignUp = () => {
     email: '',
     password: '',
   });
+   const [showPassword, setShowPassword] = useState(true);
+  
+    const togglePasswordVisibility = () => {
+      setShowPassword(!showPassword);
+    };
+  
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -67,7 +73,13 @@ const SignUp = () => {
         {/* Password */}
         <label>Password *</label>
         <input type="password" name="password" value={formData.password} onChange={handleInputChange} required />
-
+        <button
+            type="button"
+            className="show-password-btn"
+            onClick={togglePasswordVisibility}
+          >
+            {showPassword ? 'Hide' : 'Show'}
+          </button>
         {/* Date of Birth */}
         <label>Date of Birth *</label>
         <DatePicker selected={dob} onChange={(date) => setDob(date)} dateFormat="yyyy-MM-dd" required />
