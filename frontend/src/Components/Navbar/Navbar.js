@@ -12,6 +12,7 @@ const Navbar = ({ user, onLogout }) => {
       <div className="logo">PollPal</div>
       <ul className="nav-links">
         <li><Link to="/">Home</Link></li>
+        <li><Link to="/pollpal">PollPal</Link></li>
         <li><Link to="/about">About Us</Link></li>
         <li><Link to="/contact">Contact Us</Link></li>
 

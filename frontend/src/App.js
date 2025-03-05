@@ -5,6 +5,7 @@ import SignIn from './Pages/SignIn/SignIn';
 import SignUp from './Pages/SignUp/SignUp';
 import Profile from './Pages/Profile/Profile';
 import Navbar from './Components/Navbar/Navbar';
+import PollPal from './Pages/PollPal/PollPal';
 function App() {
     const [user, setUser] = useState(null);
   
@@ -29,6 +30,7 @@ function App() {
         <Navbar user={user} onLogout={handleLogout} />
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/pollpal" element={<PollPal />} />
           <Route path="/signin" element={<SignIn onLogin={handleLogin} />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/profile" element={<Profile user={user} onUpdate={setUser} />} />
