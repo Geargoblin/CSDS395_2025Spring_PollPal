@@ -10,15 +10,10 @@ app.config.from_object(config)
 # Enable CORS
 CORS(app)
 
-# Home page
+# Home page - Test route
 @app.route('/')
 def home():
     return jsonify({"message": "Welcome to PollPal Backend"})
-
-# Test route
-@app.route('/api/test', methods=['GET'])
-def test():
-    return jsonify({"message": "Hello from PollPal API!"})
 
 # MongoDB connection test route
 @app.route('/api/db-test', methods=['GET'])

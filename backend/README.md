@@ -51,6 +51,8 @@ Replace the MONGO_URI with the link to your Mongo Atlas cluster
 ```bash
 python app.py
 ```
+## API Test Endpoints
+- `GET /api/db-test` - Test endpoint that verifies MongoDB connection
 
 ## Project Structure
 
