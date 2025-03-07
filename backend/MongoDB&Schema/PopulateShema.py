@@ -18,6 +18,7 @@ votes = db["Votes"]
 # Ensure unique indexes to prevent duplicates
 users.create_index("email", unique=True)
 places.create_index("name", unique=True)
+reviews.create_index([("user_id", 1), ("place_id", 1)], unique=TRUE)
 
 # Function to insert a user (prevents duplicates)
 def insert_user(user_id, username, email, password, location, preferences):
@@ -39,7 +40,7 @@ def insert_user(user_id, username, email, password, location, preferences):
     print(f"User {username} added successfully!")
 
 # Function to insert a place (prevents duplicates)
-def insert_place(place_id, category, name, description, location, created_by):
+def insert_place(place_id, category, name, description, location):
     if places.find_one({"name": name}):
         print(f"Place '{name}' already exists.")
         return
@@ -50,7 +51,6 @@ def insert_place(place_id, category, name, description, location, created_by):
         "name": name,
         "description": description,
         "location": location,
-        "created_by": created_by,
         "likes": 0,
         "dislikes": 0
     }
@@ -102,6 +102,33 @@ def update_likes_dislikes(user_email, place_name, action):
     else:
         print("Invalid action. Use 'like' or 'dislike'.")
 
+# Function to insert a review
+def insert_review(user_email, place_name, rating, comment):
+    user = users.find_one({"email": user_email})
+    place = places.find_one({"name": place_name})
+    
+    if not user or not place:
+        print("User or Place not found.")
+        return
+    
+    user_id = user["user_id"]
+    place_id = place["place_id"]
+    
+    # Check if the user already reviewed this place
+    if reviews.find_one({"user_id": user_id, "place_id": place_id}):
+        print("User has already reviewed this place.")
+        return
+    
+    review_data = {
+        "user_id": user_id,
+        "place_id": place_id,
+        "rating": rating,
+        "comment": comment
+    }
+    
+    reviews.insert_one(review_data)
+    print(f"Review added successfully by {user_email} for {place_name}!")
+
 # Sample Insertions
 insert_user("u1", "foodie123", "foodie@example.com", "securepass123", {"city": "Cleveland", "state": "OH"}, ["food", "bars"])
 insert_place("p1", "restaurant", "Joe's Pizza", "A great spot for pizza lovers.", {"lat": 41.4993, "lng": -81.6944}, "u1")
@@ -111,3 +138,5 @@ update_password("foodie@example.com", "newsecurepassword456")
 update_likes_dislikes("foodie@example.com", "Joe's Pizza", "like")
 update_likes_dislikes("foodie@example.com", "Joe's Pizza", "dislike")
 
+# Sample Review Insertion
+insert_review("foodie@example.com", "Joe's Pizza", 5, "Best pizza in town!")
