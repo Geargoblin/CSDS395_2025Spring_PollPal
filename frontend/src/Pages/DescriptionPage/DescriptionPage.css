@@ -1,6 +1,22 @@
-.four-col{
-    display: 'grid'; 
-    grid-template-columns: 'repeat(4, 1fr)';
-    gap: '20px';
-    padding: '10px'
+.four-col {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4 fixed columns */
+    gap: 20px;
+    padding: 10px;
+    width: 80%; /* Adjust this to control the grid's width */
+    margin: 0 auto; /* Center the grid horizontally */
+    text-align: center;
+    white-space: nowrap;
+}
+
+.centered {
+    width: 50%;
+    margin: 0 auto;
+}
+
+.centered img {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+    /* Ensures the image doesn't overflow */
 }

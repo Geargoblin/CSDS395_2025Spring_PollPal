@@ -11,13 +11,17 @@ const DescriptionPage = (props) => {
 
     return (
         <div>
-            <h1>{place.name}</h1>
-            <img src={place.image} alt={place.name} />
-            <div className='four-col'>
-                <p>Likes: {place.numLikes ?? "24"}</p>
-                <p>Rating: {place.starRating ?? "⭐⭐⭐⭐"}</p>
-                <p>Category: {place.category ?? "Activity"}</p>
-                <p>Operating Hours: {place.operatingHours ?? "9AM-5PM"}</p>
+            <div className='centered'>
+                <>
+                    <h1 className='centered'>{place.name}</h1>
+                    <img src={place.image} alt={place.name} />
+                    <div className='four-col'>
+                        <p>Likes: {place.numLikes ?? "24"}</p>
+                        <p>Rating: {place.starRating ?? "⭐⭐⭐⭐"}</p>
+                        <p>Category: {place.category ?? "Activity"}</p>
+                        <p>Operating Hours: {place.operatingHours ?? "9AM-5PM"}</p>
+                    </div>
+                </>
             </div>
             <h2>Reviews</h2>
             <div className="review-box">⭐⭐⭐⭐ Great place!</div>
