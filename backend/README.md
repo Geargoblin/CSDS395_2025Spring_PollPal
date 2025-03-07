@@ -10,7 +10,13 @@ This is the backend server for the PollPal application, built with Flask and Mon
 
 ### 1. Clone the Repository
 
-### 2. Set Up a Virtual Environment
+### 2. Navigate to Backend Directory
+
+```bash
+cd backend
+```
+
+### 3. Set Up a Virtual Environment
 
 #### On Windows:
 ```bash
@@ -24,7 +30,7 @@ python3 -m venv venv
 source venv/bin/activate
 ```
 
-### 3. Install Dependencies
+### 4. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
@@ -33,6 +39,6 @@ pip install -r requirements.txt
 ### 5. Run the Server
 
 ```bash
-python backend.py
+python app.py
 ```
-
+```
