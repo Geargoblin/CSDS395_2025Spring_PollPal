@@ -5,6 +5,7 @@ from pymongo.errors import DuplicateKeyError
 # MongoDB Atlas Connection URI
 uri = "mongodb+srv://steyen:DMTJ60@cluster395capstone.uvddx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster395Capstone"
 
+# Create a new client and connect to the server
 client = MongoClient(uri, server_api=ServerApi('1'))
 db = client["PollPal"]
 
@@ -28,7 +29,7 @@ def insert_user(user_id, username, email, password, location, preferences):
         "user_id": user_id,
         "username": username,
         "email": email,
-        "password": password,  # Password stored as plaintext (not recommended for production)
+        "password": password,  
         "location": location,
         "preferences": preferences,
         "liked_places": [],
@@ -56,10 +57,9 @@ def insert_place(place_id, category, name, description, location, created_by):
     places.insert_one(place_data)
     print(f"Place '{name}' added successfully!")
 
-# Function to update user password
+# Function to update user password (plaintext)
 def update_password(email, new_password):
-    hashed_password = bcrypt.hashpw(new_password.encode("utf-8"), bcrypt.gensalt())
-    result = users.update_one({"email": email}, {"$set": {"password_hash": hashed_password.decode("utf-8")}})
+    result = users.update_one({"email": email}, {"$set": {"password": new_password}})
     
     if result.modified_count > 0:
         print("Password updated successfully!")
@@ -110,3 +110,4 @@ insert_place("p1", "restaurant", "Joe's Pizza", "A great spot for pizza lovers."
 update_password("foodie@example.com", "newsecurepassword456")
 update_likes_dislikes("foodie@example.com", "Joe's Pizza", "like")
 update_likes_dislikes("foodie@example.com", "Joe's Pizza", "dislike")
+
