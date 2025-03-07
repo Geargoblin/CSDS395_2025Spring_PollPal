@@ -18,7 +18,7 @@ votes = db["Votes"]
 # Ensure unique indexes to prevent duplicates
 users.create_index("email", unique=True)
 places.create_index("name", unique=True)
-reviews.create_index([("user_id", 1), ("place_id", 1)], unique=TRUE)
+reviews.create_index([("user_id", 1), ("place_id", 1)], unique=True)
 
 # Function to insert a user (prevents duplicates)
 def insert_user(user_id, username, email, password, location, preferences):
