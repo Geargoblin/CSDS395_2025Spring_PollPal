@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from "react-router-dom";
 import './PollPal.css';
 
 const PollPal = () => {
@@ -22,11 +23,18 @@ const PollPal = () => {
     }, 500); // Animation duration
   };
 
+  const navigate = useNavigate();
+
+  // Navigate when clicking anywhere in the card
+  const handleCardClick = () => {
+    navigate(`/activity/${places[currentIndex].name}`, { state: { place: places[currentIndex] } }); // Navigate to the activity details page
+  };
+
   if (places.length === 0) return <p>Loading...</p>;
 
   return (
     <div className="pollpal-container">
-      
+
       {/* Sidebar - Filters */}
       <div className="sidebar">
         <h3>Filters</h3>
@@ -40,7 +48,7 @@ const PollPal = () => {
       </div>
 
       {/* Activity Display */}
-      <div className="activity-card">
+      <div className="activity-card" onClick={handleCardClick}>
         <AnimatePresence>
           <motion.div
             key={places[currentIndex].name}
@@ -58,12 +66,12 @@ const PollPal = () => {
               damping: 15
             }}
           >
-            <img src={places[currentIndex].image} alt={places[currentIndex].name} className="activity-image"/>
+            <img src={places[currentIndex].image} alt={places[currentIndex].name} className="activity-image" />
             <h2>{places[currentIndex].name}</h2>
             <p>{places[currentIndex].description}</p>
             <div className="action-buttons">
-              <button className="dislike" onClick={() => handleNext('left')}>✖</button>
-              <button className="like" onClick={() => handleNext('right')}>✔</button>
+              <button className="dislike" onClick={(e) => { e.stopPropagation(); handleNext('left'); }}>✖</button>
+              <button className="like" onClick={(e) => { e.stopPropagation(); handleNext('right'); }}>✔</button>
             </div>
           </motion.div>
         </AnimatePresence>
