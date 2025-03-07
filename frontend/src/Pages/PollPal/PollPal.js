@@ -1,72 +1,75 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import './PollPal.css';
 
 const PollPal = () => {
-  const [selectedCategory, setSelectedCategory] = useState('Restaurants');
-  const [selectedLocation, setSelectedLocation] = useState('Cleveland');
-  const [selectedDistance, setSelectedDistance] = useState('5 miles');
+  const [places, setPlaces] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [swipeDirection, setSwipeDirection] = useState(null);
 
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const images = [
-    "https://via.placeholder.com/300", 
-    "https://via.placeholder.com/300/111", 
-    "https://via.placeholder.com/300/222"
-  ];
+  useEffect(() => {
+    fetch('http://127.0.0.1:5001/places')
+      .then(response => response.json())
+      .then(data => setPlaces(data))
+      .catch(error => console.error("Error fetching places:", error));
+  }, []);
 
-  const handleNextImage = () => {
-    setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
+  const handleNext = (direction) => {
+    setSwipeDirection(direction);
+    setTimeout(() => {
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % places.length);
+      setSwipeDirection(null);
+    }, 500); // Animation duration
   };
 
-  const handlePrevImage = () => {
-    setCurrentImageIndex((prevIndex) => (prevIndex - 1 + images.length) % images.length);
-  };
+  if (places.length === 0) return <p>Loading...</p>;
 
   return (
     <div className="pollpal-container">
       
-      {/* Left Sidebar - Filters */}
+      {/* Sidebar - Filters */}
       <div className="sidebar">
         <h3>Filters</h3>
         <label>Category:</label>
-        <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}>
+        <select>
           <option>Restaurants</option>
           <option>Cafes</option>
           <option>Parks</option>
           <option>Museums</option>
         </select>
-
-        <label>Location:</label>
-        <select value={selectedLocation} onChange={(e) => setSelectedLocation(e.target.value)}>
-          <option>Cleveland</option>
-          <option>New York</option>
-          <option>Los Angeles</option>
-          <option>Chicago</option>
-        </select>
-
-        <label>Distance:</label>
-        <select value={selectedDistance} onChange={(e) => setSelectedDistance(e.target.value)}>
-          <option>5 miles</option>
-          <option>10 miles</option>
-          <option>20 miles</option>
-        </select>
       </div>
 
-      {/* Middle Section - Activity Card */}
+      {/* Activity Display */}
       <div className="activity-card">
-        <button className="nav-arrow left" onClick={handlePrevImage}>←</button>
-        <div className="activity-content">
-          <img src={images[currentImageIndex]} alt="Activity" className="activity-image"/>
-          <h2>Activity Name</h2>
-          <p>Description of the activity...</p>
-          <div className="action-buttons">
-            <button className="dislike">✖</button>
-            <button className="like">✔</button>
-          </div>
-        </div>
-        <button className="nav-arrow right" onClick={handleNextImage}>→</button>
+        <AnimatePresence>
+          <motion.div
+            key={places[currentIndex].name}
+            className="activity-content"
+            initial={{ x: 0, opacity: 1, scale: 1 }}
+            animate={{ x: 0, opacity: 1, scale: 1 }}
+            exit={{
+              x: swipeDirection === 'right' ? 300 : -300,
+              opacity: 0,
+              scale: 0.95,
+            }}
+            transition={{
+              type: "spring",
+              stiffness: 120,
+              damping: 15
+            }}
+          >
+            <img src={places[currentIndex].image} alt={places[currentIndex].name} className="activity-image"/>
+            <h2>{places[currentIndex].name}</h2>
+            <p>{places[currentIndex].description}</p>
+            <div className="action-buttons">
+              <button className="dislike" onClick={() => handleNext('left')}>✖</button>
+              <button className="like" onClick={() => handleNext('right')}>✔</button>
+            </div>
+          </motion.div>
+        </AnimatePresence>
       </div>
 
-      {/* Right Sidebar - Reviews */}
+      {/* Reviews Section */}
       <div className="reviews-section">
         <h3>Reviews</h3>
         <div className="review-box">⭐⭐⭐⭐ Great place!</div>

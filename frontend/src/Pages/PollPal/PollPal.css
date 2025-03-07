@@ -1,107 +1,66 @@
 .pollpal-container {
-    display: flex;
-    height: 100vh;
-  }
-  
-  /* Left Sidebar */
-  .sidebar {
-    width: 20%;
-    background: #f4f4f4;
-    padding: 20px;
-  }
-  
-  .sidebar h3 {
-    margin-bottom: 15px;
-  }
-  
-  .sidebar label {
-    display: block;
-    margin: 10px 0 5px;
-  }
-  
-  .sidebar select {
-    width: 100%;
-    padding: 8px;
-  }
-  
-  /* Middle Section - Activity Card */
-  .activity-card {
-    width: 60%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-  }
-  
-  .activity-content {
-    text-align: center;
-    background: white;
-    padding: 20px;
-    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-    border-radius: 10px;
-  }
-  
-  .activity-image {
-    width: 300px;
-    height: 200px;
-    object-fit: cover;
-  }
-  
-  .action-buttons {
-    margin-top: 15px;
-  }
-  
-  .like, .dislike {
-    padding: 10px 15px;
-    border: none;
-    font-size: 18px;
-    cursor: pointer;
-    margin: 0 10px;
-  }
-  
-  .like {
-    background: green;
-    color: white;
-    border-radius: 50%;
-  }
-  
-  .dislike {
-    background: red;
-    color: white;
-    border-radius: 50%;
-  }
-  
-  /* Navigation Arrows */
-  .nav-arrow {
-    position: absolute;
-    background: rgba(0, 0, 0, 0.6);
-    color: white;
-    font-size: 20px;
-    border: none;
-    cursor: pointer;
-    padding: 10px;
-  }
-  
-  .nav-arrow.left {
-    left: 10px;
-  }
-  
-  .nav-arrow.right {
-    right: 10px;
-  }
-  
-  /* Right Sidebar - Reviews */
-  .reviews-section {
-    width: 20%;
-    background: #f4f4f4;
-    padding: 20px;
-  }
-  
-  .review-box {
-    background: white;
-    padding: 10px;
-    margin: 5px 0;
-    border-radius: 5px;
-    box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
-  }
-  
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+}
+
+.sidebar, .reviews-section {
+  width: 20%;
+}
+
+.activity-card {
+  position: relative;
+  width: 30%;
+  height: 350px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.activity-content {
+  position: absolute;
+  width: 100%;
+  padding: 20px;
+  text-align: center;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.activity-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.like, .dislike {
+  font-size: 20px;
+  margin: 0 10px;
+  padding: 10px 15px;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.like {
+  background-color: green;
+  color: white;
+}
+
+.dislike {
+  background-color: red;
+  color: white;
+}
+
+.like:hover, .dislike:hover {
+  transform: scale(1.1);
+}
