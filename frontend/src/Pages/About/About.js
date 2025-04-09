@@ -3,7 +3,7 @@ import './About.css';
 import image1 from '../../Photos/gautam.png';
 import image2 from '../../Photos/leo.png';
 import image3 from '../../Photos/profile_pic_parv.jpeg';
-
+import image4 from '../../Photos/stephen.png'
 
 const developers = [
   {
@@ -22,7 +22,13 @@ const developers = [
     name: "Leonardo Astorga",
     title: "Backend Developer",
     image: image2,
-    description: "Designed PollPal's experience flow and conducted user testing for optimal usability."
+    description: "Enter Description here"
+  },
+  {
+    name: "Stephen ",
+    title: "Backend Developer",
+    image: image4,
+    description: "Enter Description Here"
   }
 ];
 
