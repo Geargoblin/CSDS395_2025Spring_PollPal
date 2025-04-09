@@ -6,7 +6,12 @@ import SignUp from './Pages/SignUp/SignUp';
 import Profile from './Pages/Profile/Profile';
 import Navbar from './Components/Navbar/Navbar';
 import PollPal from './Pages/PollPal/PollPal';
+<<<<<<< Updated upstream
 import DescriptionPage from './Pages/DescriptionPage/DescriptionPage';
+=======
+import About from './Pages/About/About';
+
+>>>>>>> Stashed changes
 function App() {
     const [user, setUser] = useState(null);
   
@@ -30,6 +35,7 @@ function App() {
       <Router>
         <Navbar user={user} onLogout={handleLogout} />
         <Routes>
+          <Route path="/about" element={<About />} />
           <Route path="/" element={<Home />} />
           <Route path="/pollpal" element={<PollPal />} />
           <Route path="/signin" element={<SignIn onLogin={handleLogin} />} />

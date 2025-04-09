@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import ProfileSidebar from '../ProfileSidebar/ProfileSidebar';
 import './Navbar.css';
-
+import About from '../../Pages/About/About';
 
 const Navbar = ({ user, onLogout }) => {
   const [showSidebar, setShowSidebar] = useState(false);
@@ -11,6 +11,7 @@ const Navbar = ({ user, onLogout }) => {
     <nav className="navbar">
       <div className="logo">PollPal</div>
       <ul className="nav-links">
+       <li><Link to="/about">About</Link></li>
         <li><Link to="/">Home</Link></li>
         <li><Link to="/pollpal">PollPal</Link></li>
         <li><Link to="/about">About Us</Link></li>
