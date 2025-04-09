@@ -8,8 +8,7 @@ import Navbar from './Components/Navbar/Navbar';
 import PollPal from './Pages/PollPal/PollPal';
 import DescriptionPage from './Pages/DescriptionPage/DescriptionPage';
 import Contact from './Pages/Contact/Contact';
-
-
+import PrivateRoute from './Components/PrivateRoute/PrivateRoute';
 import About from './Pages/About/About';
 
 
@@ -39,11 +38,18 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/" element={<Home />} />
-          <Route path="/pollpal" element={<PollPal />} />
-          <Route path="/signin" element={<SignIn onLogin={handleLogin} />} />
+          <Route path="/pollpal" element={
+              <PrivateRoute user={user}>
+                  <PollPal />
+              </PrivateRoute> } />
 
+          <Route path="/signin" element={<SignIn onLogin={handleLogin} />} />
           <Route path="/signup" element={<SignUp />} />
-          <Route path="/profile" element={<Profile user={user} onUpdate={setUser} />} />
+          <Route path="/profile" element={
+                <PrivateRoute user={user}>
+                    <Profile user={user} onUpdate={setUser} />
+                </PrivateRoute>
+} />
           <Route path="/activity/:id" element={<DescriptionPage />} />
         </Routes>
       </Router>
