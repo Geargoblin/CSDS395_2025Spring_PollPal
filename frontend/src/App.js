@@ -6,8 +6,9 @@ import SignUp from './Pages/SignUp/SignUp';
 import Profile from './Pages/Profile/Profile';
 import Navbar from './Components/Navbar/Navbar';
 import PollPal from './Pages/PollPal/PollPal';
-
 import DescriptionPage from './Pages/DescriptionPage/DescriptionPage';
+import Contact from './Pages/Contact/Contact';
+
 
 import About from './Pages/About/About';
 
@@ -36,9 +37,11 @@ function App() {
         <Navbar user={user} onLogout={handleLogout} />
         <Routes>
           <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
           <Route path="/" element={<Home />} />
           <Route path="/pollpal" element={<PollPal />} />
           <Route path="/signin" element={<SignIn onLogin={handleLogin} />} />
+
           <Route path="/signup" element={<SignUp />} />
           <Route path="/profile" element={<Profile user={user} onUpdate={setUser} />} />
           <Route path="/activity/:id" element={<DescriptionPage />} />

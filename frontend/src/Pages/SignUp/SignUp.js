@@ -1,95 +1,73 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import PhoneInput from 'react-phone-input-2';
-import 'react-phone-input-2/lib/style.css';
-import ReactCrop from 'react-image-crop';
-import 'react-image-crop/dist/ReactCrop.css';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
+import { auth, db } from '../../firebase';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+import { useNavigate, Link } from 'react-router-dom';
 import './SignUp.css';
 
 const SignUp = () => {
-  const [image, setImage] = useState(null);
-  const [crop, setCrop] = useState({ aspect: 1 });
-  const [croppedImage, setCroppedImage] = useState(null);
-  const [dob, setDob] = useState(null);
-  const [phone, setPhone] = useState('');
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
     username: '',
     email: '',
     password: '',
+    dob: '',
+    phone: '',
   });
-   const [showPassword, setShowPassword] = useState(true);
-  
-    const togglePasswordVisibility = () => {
-      setShowPassword(!showPassword);
-    };
-  
 
-  const handleInputChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const navigate = useNavigate();
+  const [error, setError] = useState('');
+
+  const handleChange = (e) => {
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleImageChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setImage(URL.createObjectURL(e.target.files[0]));
+  const handleSignUp = async (e) => {
+    e.preventDefault();
+    const { username, email, password, dob, phone } = formData;
+
+    try {
+      const userCred = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCred.user;
+
+      // Save extra user info to Firestore
+      await setDoc(doc(db, 'users', user.uid), {
+        uid: user.uid,
+        username,
+        email,
+        dob,
+        phone,
+        createdAt: new Date().toISOString()
+      });
+
+      navigate('/profile');
+    } catch (err) {
+      setError(err.message);
     }
   };
 
   return (
     <div className="signup-container">
-      <h2>Sign Up</h2>
-
-      <form className="signup-form">
-        {/* Profile Picture Upload */}
-        <label>Profile Picture (Optional)</label>
-        <input type="file" accept="image/*" onChange={handleImageChange} />
-        {image && (
-          <ReactCrop src={image} crop={crop} onChange={setCrop} onComplete={(c) => setCroppedImage(c)} />
-        )}
-
-        {/* First Name & Last Name */}
-        <div className="name-fields">
-          <div>
-            <label>First Name *</label>
-            <input type="text" name="firstName" value={formData.firstName} onChange={handleInputChange} required />
-          </div>
-          <div>
-            <label>Last Name *</label>
-            <input type="text" name="lastName" value={formData.lastName} onChange={handleInputChange} required />
-          </div>
-        </div>
-
-        {/* Username */}
+      <h2>Create an Account</h2>
+      <form className="signup-form" onSubmit={handleSignUp}>
         <label>Username *</label>
-        <input type="text" name="username" value={formData.username} onChange={handleInputChange} required />
+        <input name="username" required onChange={handleChange} />
 
-        {/* Email */}
         <label>Email *</label>
-        <input type="email" name="email" value={formData.email} onChange={handleInputChange} required />
+        <input name="email" type="email" required onChange={handleChange} />
 
-        {/* Password */}
         <label>Password *</label>
-        <input type="password" name="password" value={formData.password} onChange={handleInputChange} required />
-        <button
-            type="button"
-            className="show-password-btn"
-            onClick={togglePasswordVisibility}
-          >
-            {showPassword ? 'Hide' : 'Show'}
-          </button>
-        {/* Date of Birth */}
+        <input name="password" type="password" required onChange={handleChange} />
+
         <label>Date of Birth *</label>
-        <DatePicker selected={dob} onChange={(date) => setDob(date)} dateFormat="yyyy-MM-dd" required />
+        <input name="dob" type="date" required onChange={handleChange} />
 
-        {/* Phone Number */}
-        <label>Phone Number (Optional)</label>
-        <PhoneInput country={'us'} value={phone} onChange={setPhone} />
+        <label>Phone (optional)</label>
+        <input name="phone" onChange={handleChange} />
 
-        <button type="submit" className="signup-btn">Create Account</button>
+        <button type="submit" className="signup-btn">Sign Up</button>
       </form>
+
+      {error && <p className="error">{error}</p>}
 
       <p className="signin-link">
         Already have an account? <Link to="/signin">Sign In</Link>
