@@ -5,7 +5,7 @@ import { doc, setDoc } from 'firebase/firestore';
 import { useNavigate, Link } from 'react-router-dom';
 import './SignUp.css';
 
-const SignUp = () => {
+const SignUp = ({onLogin}) => {
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -24,21 +24,27 @@ const SignUp = () => {
   const handleSignUp = async (e) => {
     e.preventDefault();
     const { username, email, password, dob, phone } = formData;
-
+  
     try {
       const userCred = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCred.user;
-
-      // Save extra user info to Firestore
-      await setDoc(doc(db, 'users', user.uid), {
+  
+      const profileData = {
         uid: user.uid,
         username,
         email,
         dob,
         phone,
+        profilePic: '', // default
         createdAt: new Date().toISOString()
-      });
-
+      };
+  
+      await setDoc(doc(db, 'users', user.uid), profileData);
+  
+      // Save user and navigate
+      localStorage.setItem('user', JSON.stringify(profileData));
+      alert('Signed up successfully!');
+      onLogin(profileData);  // update app-level state
       navigate('/profile');
     } catch (err) {
       setError(err.message);

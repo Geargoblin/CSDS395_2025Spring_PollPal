@@ -44,7 +44,8 @@ function App() {
               </PrivateRoute> } />
 
           <Route path="/signin" element={<SignIn onLogin={handleLogin} />} />
-          <Route path="/signup" element={<SignUp />} />
+          <Route path="/signup" element={<SignUp onLogin={handleLogin} />} />
+
           <Route path="/profile" element={
                 <PrivateRoute user={user}>
                     <Profile user={user} onUpdate={setUser} />
