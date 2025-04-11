@@ -2,18 +2,18 @@ from pymongo import MongoClient
 import math
 from datetime import datetime, timedelta
 
-# Database Setup // (Will probably need to update variable names)
+# Database Setup (Will probably need to update variable names)
 client = MongoClient("mongodb://localhost:27017/")
 db = client["recommendation_app"]
 posts_col = db["posts"]
 users_col = db["users"]
 
-//Helper function, normalizes probs
+# Helper function, normalizes probs
 def normalize_probs(probs):
     total = sum(probs.values())
     return {k: v / total for k, v in probs.items()}
 
-//Alters user prior probability, affecting what posts they will see first
+# Alters user prior probability, affecting what posts they will see first
 def update_user_prior(user_id, category_clicked):
     user = users_col.find_one({"user_id": user_id})
     priors = user["category_prior"]
@@ -21,7 +21,7 @@ def update_user_prior(user_id, category_clicked):
     priors = normalize_probs(priors)
     users_col.update_one({"user_id": user_id}, {"$set": {"category_prior": priors}})
 
-// Gives ever post a score, allowing them to be sorted based on user history
+# Gives ever post a score, allowing them to be sorted based on user history
 def score_post(post, priors, last_viewed_category=None):
     category_score = priors.get(post["category"], 0.0)
 
@@ -35,7 +35,7 @@ def score_post(post, priors, last_viewed_category=None):
 
     return category_score + rating_score + review_score + recency_bonus
 
-// Gets posts and places them in the order the user should see them
+# Gets posts and places them in the order the user should see them
 def get_ranked_posts(user_id):
     user = users_col.find_one({"user_id": user_id})
     viewed_posts = set(user.get("viewed_posts", []))
@@ -54,7 +54,7 @@ def get_ranked_posts(user_id):
     ranked.sort(key=lambda x: x[1], reverse=True)
     return [p for p, _ in ranked]
 
-// viewed posts are removed from the list so that users will see new things
+# viewed posts are removed from the list so that users will see new things
 def mark_post_viewed(user_id, post_id, category):
     users_col.update_one(
         {"user_id": user_id},
