@@ -3,7 +3,7 @@ from bson import ObjectId
 from models import db
 
 # User collection reference
-users = db.users
+users = db.Users
 
 def create_user(username, email, first_name, last_name, password, date_of_birth, phone_number):
     """
