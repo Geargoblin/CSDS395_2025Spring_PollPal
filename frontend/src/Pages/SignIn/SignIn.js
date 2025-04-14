@@ -16,23 +16,31 @@ const SignIn = ({ onLogin }) => {
     setError('');
 
     try {
-      const userCred = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCred.user;
+      const user = {
+        username: email,
+        password: password
+      }
+      const response = await fetch('http://localhost:5001/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(user)
+      });
 
-      // Fetch extra profile data
-      const docRef = doc(db, 'users', user.uid);
-      const docSnap = await getDoc(docRef);
+      const data = await response.json();
 
-      if (docSnap.exists()) {
-        const userData = docSnap.data();
-        onLogin(userData);
-        localStorage.setItem('user', JSON.stringify(userData));
+      if (response.status === 200) {
+        // Login successful
+        localStorage.setItem('user', JSON.stringify(data.user));
+        onLogin(data.user)
         navigate('/profile');
       } else {
-        setError('User profile not found.');
+        setError(data.message || 'Login failed.');
       }
     } catch (err) {
-      setError(err.message);
+      console.error(err);
+      setError('Server error. Please try again later.');
     }
   };
 
@@ -41,7 +49,7 @@ const SignIn = ({ onLogin }) => {
       <h2>Sign In</h2>
       <form className="signin-form" onSubmit={handleSignIn}>
         <label>Email</label>
-        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <input value={email} onChange={(e) => setEmail(e.target.value)} required />
 
         <label>Password</label>
         <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
