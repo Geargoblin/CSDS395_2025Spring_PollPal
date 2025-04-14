@@ -8,5 +8,4 @@ client = MongoClient(MONGO_URI)
 db = client[MONGO_DB_NAME]
 
 # Define collections example - We don't need yet, we need to meet later with db team to decide what collections we need
-users = db.users
-polls = db.polls 
+users = db.Users
