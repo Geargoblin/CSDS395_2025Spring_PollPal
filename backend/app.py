@@ -1,9 +1,15 @@
 from flask import Flask, jsonify, request, session
 from flask_cors import CORS
 from models import db
-from models.user import create_user, get_user_by_username
+from models.user import (
+    create_user, get_user_by_username, get_user_by_id,
+    update_user_preferences, update_user_location,
+    add_liked_place, add_disliked_place, remove_place_from_lists,
+    get_user_details
+)
 import config
 from datetime import datetime
+from bson import ObjectId
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -49,6 +55,8 @@ def register():
         password = data.get('password')
         date_of_birth = data.get('date_of_birth')
         phone_number = data.get('phone_number')
+        preferences = data.get('preferences', [])
+        location = data.get('location')
         
         # Validate required fields
         if not all([username, email, first_name, last_name, password]):
@@ -65,7 +73,9 @@ def register():
             last_name=last_name,
             password=password,
             date_of_birth=date_of_birth,
-            phone_number=phone_number
+            phone_number=phone_number,
+            preferences=preferences,
+            location=location
         )
         
         if error:
@@ -86,7 +96,11 @@ def register():
                 "username": user['username'],
                 "email": user['email'],
                 "first_name": user['first_name'],
-                "last_name": user['last_name']
+                "last_name": user['last_name'],
+                "preferences": user['preferences'],
+                "location": user.get('location'),
+                "liked_places": user.get('liked_places', []),
+                "disliked_places": user.get('disliked_places', [])
             }
         }), 201
         
@@ -135,7 +149,11 @@ def login():
                 "username": user['username'],
                 "email": user['email'],
                 "first_name": user['first_name'],
-                "last_name": user['last_name']
+                "last_name": user['last_name'],
+                "preferences": user.get('preferences', []),
+                "liked_places": user.get('liked_places', []),
+                "disliked_places": user.get('disliked_places', []),
+                "location": user.get('location')
             }
         })
         
@@ -166,31 +184,208 @@ def get_current_user():
             "message": "Not authenticated"
         }), 401
     
-    # Get user from database
-    from models.user import get_user_by_id
-    user = get_user_by_id(session['user_id'])
-    
-    if not user:
-        # Clear invalid session
-        session.clear()
+    try:
+        # Get user with detailed information
+        user, error = get_user_details(session['user_id'])
+        
+        if error:
+            # Clear invalid session if user not found
+            if error == "User not found":
+                session.clear()
+            return jsonify({
+                "status": "error",
+                "message": error
+            }), 401
+        
+        # Return user data
+        return jsonify({
+            "status": "success",
+            "user": {
+                "id": user['_id'],
+                "username": user['username'],
+                "email": user['email'],
+                "first_name": user['first_name'],
+                "last_name": user['last_name'],
+                "preferences": user.get('preferences', []),
+                "liked_places": user.get('liked_places', []),
+                "disliked_places": user.get('disliked_places', []),
+                "location": user.get('location')
+            }
+        })
+    except Exception as e:
         return jsonify({
             "status": "error",
-            "message": "User not found"
+            "message": f"Error retrieving user data: {str(e)}"
+        }), 500
+
+# Update user preferences endpoint
+@app.route('/api/user/preferences', methods=['PUT'])
+def update_preferences():
+    # Check if user is logged in
+    if 'user_id' not in session:
+        return jsonify({
+            "status": "error",
+            "message": "Not authenticated"
         }), 401
     
-    # Return user data
-    return jsonify({
-        "status": "success",
-        "user": {
-            "id": user['_id'],
-            "username": user['username'],
-            "email": user['email'],
-            "first_name": user['first_name'],
-            "last_name": user['last_name']
-        }
-    })
+    try:
+        data = request.get_json()
+        preferences = data.get('preferences', [])
+        
+        # Update user preferences
+        success = update_user_preferences(session['user_id'], preferences)
+        
+        if not success:
+            return jsonify({
+                "status": "error",
+                "message": "Failed to update preferences"
+            }), 400
+        
+        return jsonify({
+            "status": "success",
+            "message": "Preferences updated successfully",
+            "preferences": preferences
+        })
+        
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": f"Error updating preferences: {str(e)}"
+        }), 500
 
+# Update user location endpoint
+@app.route('/api/user/location', methods=['PUT'])
+def update_location():
+    # Check if user is logged in
+    if 'user_id' not in session:
+        return jsonify({
+            "status": "error",
+            "message": "Not authenticated"
+        }), 401
+    
+    try:
+        data = request.get_json()
+        location = data.get('location')
+        
+        if not location:
+            return jsonify({
+                "status": "error",
+                "message": "Location is required"
+            }), 400
+        
+        # Update user location
+        success = update_user_location(session['user_id'], location)
+        
+        if not success:
+            return jsonify({
+                "status": "error",
+                "message": "Failed to update location"
+            }), 400
+        
+        return jsonify({
+            "status": "success",
+            "message": "Location updated successfully",
+            "location": location
+        })
+        
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": f"Error updating location: {str(e)}"
+        }), 500
 
+# Add place to liked places endpoint
+@app.route('/api/user/places/like/<place_id>', methods=['POST'])
+def like_place(place_id):
+    # Check if user is logged in
+    if 'user_id' not in session:
+        return jsonify({
+            "status": "error",
+            "message": "Not authenticated"
+        }), 401
+    
+    try:
+        # Add place to liked places
+        success = add_liked_place(session['user_id'], place_id)
+        
+        if not success:
+            return jsonify({
+                "status": "error",
+                "message": "Failed to like place"
+            }), 400
+        
+        return jsonify({
+            "status": "success",
+            "message": "Place added to liked places"
+        })
+        
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": f"Error liking place: {str(e)}"
+        }), 500
+
+# Add place to disliked places endpoint
+@app.route('/api/user/places/dislike/<place_id>', methods=['POST'])
+def dislike_place(place_id):
+    # Check if user is logged in
+    if 'user_id' not in session:
+        return jsonify({
+            "status": "error",
+            "message": "Not authenticated"
+        }), 401
+    
+    try:
+        # Add place to disliked places
+        success = add_disliked_place(session['user_id'], place_id)
+        
+        if not success:
+            return jsonify({
+                "status": "error",
+                "message": "Failed to dislike place"
+            }), 400
+        
+        return jsonify({
+            "status": "success",
+            "message": "Place added to disliked places"
+        })
+        
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": f"Error disliking place: {str(e)}"
+        }), 500
+
+# Remove place from liked/disliked places endpoint
+@app.route('/api/user/places/reset/<place_id>', methods=['POST'])
+def reset_place(place_id):
+    # Check if user is logged in
+    if 'user_id' not in session:
+        return jsonify({
+            "status": "error",
+            "message": "Not authenticated"
+        }), 401
+    
+    try:
+        # Remove place from both lists
+        success = remove_place_from_lists(session['user_id'], place_id)
+        
+        if not success:
+            return jsonify({
+                "status": "error",
+                "message": "Failed to reset place status"
+            }), 400
+        
+        return jsonify({
+            "status": "success",
+            "message": "Place removed from liked/disliked places"
+        })
+        
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": f"Error resetting place status: {str(e)}"
+        }), 500
 
 # ENDPOINT FOR RETRIEVING PLACES
 places = [
