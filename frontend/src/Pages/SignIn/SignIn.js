@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import './SignIn.css';
 
 const SignIn = ({ onLogin }) => {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -17,7 +17,7 @@ const SignIn = ({ onLogin }) => {
 
     try {
       const user = {
-        username: email,
+        username: username,
         password: password
       }
       const response = await fetch('http://localhost:5001/api/auth/login', {
@@ -48,8 +48,8 @@ const SignIn = ({ onLogin }) => {
     <div className="signin-container">
       <h2>Sign In</h2>
       <form className="signin-form" onSubmit={handleSignIn}>
-        <label>Email</label>
-        <input value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <label>Username</label>
+        <input value={username} onChange={(e) => setUsername(e.target.value)} required />
 
         <label>Password</label>
         <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
