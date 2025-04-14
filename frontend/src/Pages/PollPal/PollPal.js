@@ -7,6 +7,7 @@ const PollPal = () => {
   const [places, setPlaces] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [swipeDirection, setSwipeDirection] = useState(null);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     fetch('http://127.0.0.1:5001/places')
@@ -22,6 +23,31 @@ const PollPal = () => {
       setSwipeDirection(null);
     }, 500); // Animation duration
   };
+
+  const handleLike = async () => {
+    setError('');
+    try {
+      const url = "http://localhost:5001/api/user/places/like/" + places[currentIndex].name
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      const data = await response.json();
+
+      if (response.status === 200) {
+        //Succesfully liked
+        handleNext('right');
+      } else {
+        setError(data.message || 'Failed to like.');
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Server error. Please try again later.');
+    }
+  }
 
   const navigate = useNavigate();
 
@@ -71,8 +97,9 @@ const PollPal = () => {
             <p>{places[currentIndex].description}</p>
             <div className="action-buttons">
               <button className="dislike" onClick={(e) => { e.stopPropagation(); handleNext('left'); }}>✖</button>
-              <button className="like" onClick={(e) => { e.stopPropagation(); handleNext('right'); }}>✔</button>
+              <button className="like" onClick={(e) => { e.stopPropagation(); handleLike(); }}>✔</button>
             </div>
+            {error && <h2>{error}</h2>}
           </motion.div>
         </AnimatePresence>
       </div>
