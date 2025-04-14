@@ -9,9 +9,11 @@ const SignUp = ({onLogin}) => {
   const [formData, setFormData] = useState({
     username: '',
     email: '',
+    first_name: 'Test',
+    last_name: 'Test',
     password: '',
-    dob: '',
-    phone: '',
+    date_of_birth: '',
+    phone_number: '',
   });
 
   const navigate = useNavigate();
@@ -23,31 +25,28 @@ const SignUp = ({onLogin}) => {
 
   const handleSignUp = async (e) => {
     e.preventDefault();
-    const { username, email, password, dob, phone } = formData;
   
     try {
-      const userCred = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCred.user;
-  
-      const profileData = {
-        uid: user.uid,
-        username,
-        email,
-        dob,
-        phone,
-        profilePic: '', // default
-        createdAt: new Date().toISOString()
-      };
-  
-      await setDoc(doc(db, 'users', user.uid), profileData);
-  
-      // Save user and navigate
-      localStorage.setItem('user', JSON.stringify(profileData));
-      alert('Signed up successfully!');
-      onLogin(profileData);  // update app-level state
-      navigate('/profile');
+      const response = await fetch('http://localhost:5001/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+      });
+
+      const data = await response.json();
+
+      if (response.status === 201) {
+        // Registration successful, you could also log the user in here if needed
+        localStorage.setItem('user', JSON.stringify(data.user));
+        navigate('/profile');
+      } else {
+        setError(data.message || 'Registration failed.');
+      }
     } catch (err) {
-      setError(err.message);
+      console.error(err);
+      setError('Server error. Please try again later.');
     }
   };
 
@@ -65,10 +64,10 @@ const SignUp = ({onLogin}) => {
         <input name="password" type="password" required onChange={handleChange} />
 
         <label>Date of Birth *</label>
-        <input name="dob" type="date" required onChange={handleChange} />
+        <input name="date_of_birth" type="date" required onChange={handleChange} />
 
         <label>Phone (optional)</label>
-        <input name="phone" onChange={handleChange} />
+        <input name="phone_number" onChange={handleChange} />
 
         <button type="submit" className="signup-btn">Sign Up</button>
       </form>
