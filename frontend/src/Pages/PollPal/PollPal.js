@@ -32,7 +32,8 @@ const PollPal = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-        }
+        },
+        credentials: 'include',
       });
 
       const data = await response.json();
@@ -42,6 +43,32 @@ const PollPal = () => {
         handleNext('right');
       } else {
         setError(data.message || 'Failed to like.');
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Server error. Please try again later.');
+    }
+  }
+
+  const handleDislike = async () => {
+    setError('');
+    try {
+      const url = "http://localhost:5001/api/user/places/dislike/" + places[currentIndex].name
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      const data = await response.json();
+
+      if (response.status === 200) {
+        //Succesfully disliked
+        handleNext('left');
+      } else {
+        setError(data.message || 'Failed to dislike.');
       }
     } catch (err) {
       console.error(err);
@@ -96,7 +123,7 @@ const PollPal = () => {
             <h2>{places[currentIndex].name}</h2>
             <p>{places[currentIndex].description}</p>
             <div className="action-buttons">
-              <button className="dislike" onClick={(e) => { e.stopPropagation(); handleNext('left'); }}>✖</button>
+              <button className="dislike" onClick={(e) => { e.stopPropagation(); handleDislike(); }}>✖</button>
               <button className="like" onClick={(e) => { e.stopPropagation(); handleLike(); }}>✔</button>
             </div>
             {error && <h2>{error}</h2>}

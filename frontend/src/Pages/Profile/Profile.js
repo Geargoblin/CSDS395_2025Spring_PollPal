@@ -13,6 +13,27 @@ const Profile = ({ user, onUpdate }) => {
     profilePic: user.profilePic || '',
   });
 
+  const getCurrentUser = async () => {
+    const response = await fetch('http://localhost:5001/api/auth/me', {
+      method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+    });
+
+    const data = await response.json();
+
+    if(response.status === 200){
+      //Successfully retrieved user data
+      
+    }
+    else {
+      //Error retrieving user data
+
+    }
+  }
+
   const [uploading, setUploading] = useState(false);
 
   const handleChange = (e) => {
