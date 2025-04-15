@@ -8,29 +8,33 @@ import './Profile.css';
 const Profile = ({ user, onUpdate }) => {
   const [formData, setFormData] = useState({
     username: user.username || '',
-    dob: user.dob || '',
-    phone: user.phone || '',
-    profilePic: user.profilePic || '',
+    date_of_birth: user.dob || '',
+    phone_number: user.phone || '',
+    //profilePic: user.profilePic || '',
   });
+  const [message, setMessage] = useState('');
 
-  const getCurrentUser = async () => {
-    const response = await fetch('http://localhost:5001/api/auth/me', {
-      method: 'GET',
+  const updateProfile = async (e) => {
+    e.preventDefault()
+
+    const response = await fetch('http://localhost:5001/api/user/update', {
+      method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify(formData),
         credentials: 'include',
     });
 
     const data = await response.json();
 
     if(response.status === 200){
-      //Successfully retrieved user data
-      
+      //Successfully updated user data
+      setMessage("Successfully updated your information.");
     }
     else {
-      //Error retrieving user data
-
+      //Error updating user data
+      setMessage(data.message);
     }
   }
 
@@ -72,22 +76,23 @@ const Profile = ({ user, onUpdate }) => {
     <div className="profile-container">
       <h2>Edit Profile</h2>
 
-      <div className="profile-image-section">
+      {/* <div className="profile-image-section">
         <img src={formData.profilePic || "https://via.placeholder.com/150"} alt="Profile" />
         <input type="file" accept="image/*" onChange={handleImageUpload} />
         {uploading && <p>Uploading image...</p>}
-      </div>
+      </div> */}
 
       <label>Username</label>
       <input type="text" name="username" value={formData.username} onChange={handleChange} />
 
       <label>Date of Birth</label>
-      <input type="date" name="dob" value={formData.dob} onChange={handleChange} />
+      <input type="date" name="date_of_birth" value={formData.date_of_birth} onChange={handleChange} />
 
       <label>Phone</label>
-      <input type="text" name="phone" value={formData.phone} onChange={handleChange} />
+      <input type="text" name="phone_number" value={formData.phone_number} onChange={handleChange} />
 
-      <button onClick={handleSave} className="save-btn">Save Changes</button>
+      <button onClick={updateProfile} className="save-btn">Save Changes</button>
+      {message && <h3>{message}</h3>}
     </div>
   );
 };
