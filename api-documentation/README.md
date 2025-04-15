@@ -16,15 +16,11 @@ Creates a new user account and starts a session.
 {
   "username": "string",       // Required
   "email": "string",          // Required
-  "first_name": "string",     // Required
-  "last_name": "string",      // Required
   "password": "string",       // Required
   "date_of_birth": "string",  // Optional
   "phone_number": "string",   // Optional
   "preferences": ["string"],  // Optional, array of preference strings
-  "location": {               // Optional
-    // Location object structure
-  }
+  "location": "string"        // Optional, location as a string
 }
 ```
 
@@ -37,12 +33,8 @@ Creates a new user account and starts a session.
     "id": "string",
     "username": "string",
     "email": "string",
-    "first_name": "string",
-    "last_name": "string",
     "preferences": ["string"],
-    "location": {
-      // Location object
-    },
+    "location": "string",
     "liked_places": ["string"],
     "disliked_places": ["string"]
   }
@@ -96,14 +88,10 @@ Authenticates a user and starts a session.
     "id": "string",
     "username": "string",
     "email": "string",
-    "first_name": "string",
-    "last_name": "string",
     "preferences": ["string"],
     "liked_places": ["string"],
     "disliked_places": ["string"],
-    "location": {
-      // Location object
-    }
+    "location": "string"
   }
 }
 ```
@@ -161,8 +149,6 @@ Retrieves the currently authenticated user's information including detailed plac
     "id": "string",
     "username": "string",
     "email": "string",
-    "first_name": "string",
-    "last_name": "string",
     "preferences": ["string"],
     "location": "string",
     "liked_places": [
@@ -199,12 +185,12 @@ Retrieves the currently authenticated user's information including detailed plac
   }
   ```
 
-## User Preference Endpoints
+## User Management Endpoints
 
-### Update Preferences
-Updates the current user's preferences.
+### Update User Information
+Updates one or more fields of the current user's information.
 
-- **URL**: `/api/user/preferences`
+- **URL**: `/api/user/update`
 - **Method**: `PUT`
 - **Authentication**: Requires an active session
 - **Content-Type**: `application/json`
@@ -212,16 +198,37 @@ Updates the current user's preferences.
 **Request Body**:
 ```json
 {
-  "preferences": ["string"]  // Array of preference strings
+  "username": "string",       // Optional
+  "email": "string",          // Optional
+  "password": "string",       // Optional
+  "date_of_birth": "string",  // Optional
+  "phone_number": "string",   // Optional
+  "preferences": ["string"],  // Optional, array of preference strings
+  "location": "string"        // Optional, location as a string
 }
 ```
+
+**Notes**:
+- You only need to include the fields you want to update
+- Any fields not included or set to null will not be modified
+- Username and email must be unique across all users
 
 **Successful Response** (Status Code: 200):
 ```json
 {
   "status": "success",
-  "message": "Preferences updated successfully",
-  "preferences": ["string"]
+  "message": "User information updated successfully",
+  "user": {
+    "id": "string",
+    "username": "string",
+    "email": "string",
+    "preferences": ["string"],
+    "liked_places": ["string"],
+    "disliked_places": ["string"],
+    "location": "string",
+    "date_of_birth": "string",
+    "phone_number": "string"
+  }
 }
 ```
 
@@ -233,72 +240,25 @@ Updates the current user's preferences.
     "message": "Not authenticated"
   }
   ```
-- Update failure (Status Code: 400):
+- Validation error (Status Code: 400):
   ```json
   {
     "status": "error",
-    "message": "Failed to update preferences"
+    "message": "Username already exists" // Or other specific error message
+  }
+  ```
+- No valid fields (Status Code: 400):
+  ```json
+  {
+    "status": "error",
+    "message": "No valid fields to update"
   }
   ```
 - Server error (Status Code: 500):
   ```json
   {
     "status": "error",
-    "message": "Error updating preferences: Error details"
-  }
-  ```
-
-### Update Location
-Updates the current user's location.
-
-- **URL**: `/api/user/location`
-- **Method**: `PUT`
-- **Authentication**: Requires an active session
-- **Content-Type**: `application/json`
-
-**Request Body**:
-```json
-{
-  "location": "string"  // Required - location as a string
-}
-```
-
-**Successful Response** (Status Code: 200):
-```json
-{
-  "status": "success",
-  "message": "Location updated successfully",
-  "location": "string"
-}
-```
-
-**Error Responses**:
-- Not authenticated (Status Code: 401):
-  ```json
-  {
-    "status": "error",
-    "message": "Not authenticated"
-  }
-  ```
-- Missing location (Status Code: 400):
-  ```json
-  {
-    "status": "error",
-    "message": "Location is required"
-  }
-  ```
-- Update failure (Status Code: 400):
-  ```json
-  {
-    "status": "error",
-    "message": "Failed to update location"
-  }
-  ```
-- Server error (Status Code: 500):
-  ```json
-  {
-    "status": "error",
-    "message": "Error updating location: Error details"
+    "message": "Error updating user information: Error details"
   }
   ```
 
@@ -495,3 +455,7 @@ Test connection to MongoDB and list available collections.
    - Users can like, dislike, or reset their opinion on places
    - Liked places are returned with complete details in the `/api/auth/me` endpoint
    - Place data includes details such as Address, Name, Rating, Price, etc.
+
+5. **User Updates**:
+   - Use the unified `/api/user/update` endpoint to update any user attributes
+   - Only send the fields you want to change in your request

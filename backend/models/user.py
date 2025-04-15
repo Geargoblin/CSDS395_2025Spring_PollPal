@@ -5,15 +5,13 @@ from models import db
 # User collection reference
 users = db.Users
 
-def create_user(username, email, first_name, last_name, password, date_of_birth, phone_number, preferences=None, location=None):
+def create_user(username, email, password, date_of_birth, phone_number, preferences=None, location=None):
     """
     Create a new user in the database
     
     Parameters:
     - username: unique username for the user
     - email: unique email for the user
-    - first_name: user's first name
-    - last_name: user's last name
     - password: user's password (should be hashed in production)
     - date_of_birth: user's date of birth
     - phone_number: user's phone number
@@ -34,8 +32,6 @@ def create_user(username, email, first_name, last_name, password, date_of_birth,
     user = {
         "username": username,
         "email": email,
-        "first_name": first_name,
-        "last_name": last_name,
         "password": password,  # This should be hashed but its fine for now
         "date_of_birth": date_of_birth,
         "phone_number": phone_number,
@@ -88,42 +84,6 @@ def get_user_by_email(email):
     if user:
         user["_id"] = str(user["_id"])
     return user
-
-def update_user_preferences(user_id, preferences):
-    """
-    Update a user's category preferences
-    """
-    try:
-        result = users.update_one(
-            {"_id": ObjectId(user_id)},
-            {
-                "$set": {
-                    "preferences": preferences,
-                    "updated_at": datetime.utcnow()
-                }
-            }
-        )
-        return result.modified_count > 0
-    except:
-        return False
-
-def update_user_location(user_id, location):
-    """
-    Update a user's location
-    """
-    try:
-        result = users.update_one(
-            {"_id": ObjectId(user_id)},
-            {
-                "$set": {
-                    "location": location,
-                    "updated_at": datetime.utcnow()
-                }
-            }
-        )
-        return result.modified_count > 0
-    except:
-        return False
 
 def add_liked_place(user_id, place_id):
     """
@@ -246,4 +206,63 @@ def get_user_details(user_id):
         return user, None
         
     except Exception as e:
-        return None, f"Error retrieving user data: {str(e)}" 
+        return None, f"Error retrieving user data: {str(e)}"
+
+def update_user(user_id, update_data):
+    """
+    Update multiple user fields at once
+    
+    Parameters:
+    - user_id: ID of the user to update
+    - update_data: Dictionary containing fields to update (username, email, password, 
+                   date_of_birth, phone_number, preferences, location)
+    
+    Returns:
+    - tuple: (success, error_message)
+    """
+    try:
+        # Create update document with only non-None fields
+        update_doc = {}
+        
+        # Check username uniqueness if updating username
+        if "username" in update_data and update_data["username"]:
+            existing_user = users.find_one({"username": update_data["username"]})
+            if existing_user and str(existing_user["_id"]) != user_id:
+                return False, "Username already exists"
+            update_doc["username"] = update_data["username"]
+            
+        # Check email uniqueness if updating email
+        if "email" in update_data and update_data["email"]:
+            existing_user = users.find_one({"email": update_data["email"]})
+            if existing_user and str(existing_user["_id"]) != user_id:
+                return False, "Email already exists"
+            update_doc["email"] = update_data["email"]
+            
+        # Add other fields if they exist in the update data
+        for field in ["password", "date_of_birth", "phone_number", "preferences", "location"]:
+            if field in update_data and update_data[field] is not None:
+                update_doc[field] = update_data[field]
+        
+        # Only proceed if there are fields to update
+        if not update_doc:
+            return False, "No valid fields to update"
+            
+        # Add updated timestamp
+        update_doc["updated_at"] = datetime.utcnow()
+        
+        # Update the user
+        result = users.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": update_doc}
+        )
+        
+        if result.modified_count > 0:
+            return True, None
+        elif users.find_one({"_id": ObjectId(user_id)}):
+            # User exists but no changes made (might be same values)
+            return True, None
+        else:
+            return False, "User not found"
+            
+    except Exception as e:
+        return False, str(e) 
