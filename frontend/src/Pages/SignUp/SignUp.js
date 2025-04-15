@@ -9,8 +9,6 @@ const SignUp = ({onLogin}) => {
   const [formData, setFormData] = useState({
     username: '',
     email: '',
-    first_name: 'Test',
-    last_name: 'Test',
     password: '',
     date_of_birth: '',
     phone_number: '',
