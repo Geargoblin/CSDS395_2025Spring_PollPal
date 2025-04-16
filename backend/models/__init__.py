@@ -2,7 +2,7 @@ from pymongo import MongoClient
 from config import MONGO_URI, MONGO_DB_NAME
 
 # Create MongoDB client
-client = MongoClient(MONGO_URI)
+client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=100000, connectTimeoutMS=100000)
 
 # Get the database
 db = client[MONGO_DB_NAME]
