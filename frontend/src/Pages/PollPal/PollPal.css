@@ -11,12 +11,15 @@
 
 .activity-card {
   position: relative;
-  width: 30%;
-  height: 350px;
+  width: 40%;
+  height: 450px;
   display: flex;
   justify-content: center;
   align-items: center;
   overflow: hidden;
+  margin-top: 30px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
 }
 
 .activity-content {
@@ -24,13 +27,13 @@
   width: 100%;
   padding: 20px;
   text-align: center;
-  background: white;
+  
   border-radius: 10px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  
 }
 
 .activity-image {
-  width: 100%;
+  width: 90%;
   height: 200px;
   object-fit: cover;
   border-radius: 10px;
