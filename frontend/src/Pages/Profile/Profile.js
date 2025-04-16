@@ -4,15 +4,27 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../../firebase';
 import { v4 as uuidv4 } from 'uuid';
 import './Profile.css';
+import Select from 'react-select';
 
 const Profile = ({ user, onUpdate }) => {
   const [formData, setFormData] = useState({
     username: user.username || '',
     date_of_birth: user.dob || '',
     phone_number: user.phone || '',
+    location: user.location || '',
+    preferences: user.preferences || [],
     //profilePic: user.profilePic || '',
   });
   const [message, setMessage] = useState('');
+  const options = [
+    { value: 'food', label: 'Food' },
+    { value: 'music', label: 'Music' },
+    { value: 'outdoors', label: 'Outdoors' },
+    { value: 'park', label: 'Park' },
+    { value: 'museum', label: 'Museum' },
+    { value: 'bar', label: 'Bar'},
+    { value: 'active', label: 'Active'},
+  ];
 
   const updateProfile = async (e) => {
     e.preventDefault()
@@ -90,6 +102,18 @@ const Profile = ({ user, onUpdate }) => {
 
       <label>Phone</label>
       <input type="text" name="phone_number" value={formData.phone_number} onChange={handleChange} />
+
+      <label>Location</label>
+      <input type="text" name="location" value={formData.location} onChange={handleChange} />
+
+      <label>Interests</label>
+      <Select options = {options} isMulti name="preferences" 
+        onChange={(selectedOptions) => {
+          setFormData(prev => ({
+            ...prev, preferences: selectedOptions.map(option => option.value)
+          }));
+        }}
+      />
 
       <button onClick={updateProfile} className="save-btn">Save Changes</button>
       {message && <h3>{message}</h3>}

@@ -91,7 +91,7 @@ const SignUp = ({onLogin}) => {
           }));
         }}/>
 
-        <button type="submit" className="signup-btn">Sign Up</button>
+        <button style={{ paddingTop: '12px' }} type="submit" className="signup-btn">Sign Up</button>
       </form>
 
       {error && <p className="error">{error}</p>}
