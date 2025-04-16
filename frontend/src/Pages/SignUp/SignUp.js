@@ -4,6 +4,7 @@ import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { useNavigate, Link } from 'react-router-dom';
 import './SignUp.css';
+import Select from 'react-select';
 
 const SignUp = ({onLogin}) => {
   const [formData, setFormData] = useState({
@@ -12,7 +13,19 @@ const SignUp = ({onLogin}) => {
     password: '',
     date_of_birth: '',
     phone_number: '',
+    location: '',
+    preferences: [],
   });
+
+  const options = [
+    { value: 'food', label: 'Food' },
+    { value: 'music', label: 'Music' },
+    { value: 'outdoors', label: 'Outdoors' },
+    { value: 'park', label: 'Park' },
+    { value: 'museum', label: 'Museum' },
+    { value: 'bar', label: 'Bar'},
+    { value: 'active', label: 'Active'},
+  ];
 
   const navigate = useNavigate();
   const [error, setError] = useState('');
@@ -66,6 +79,17 @@ const SignUp = ({onLogin}) => {
 
         <label>Phone (optional)</label>
         <input name="phone_number" onChange={handleChange} />
+
+        <label>Location</label>
+        <input name="location" onChange={handleChange} />
+
+        <label>Interests</label>
+        <Select options = {options} isMulti name="preferences" 
+        onChange={(selectedOptions) => {
+          setFormData(prev => ({
+            ...prev, preferences: selectedOptions.map(option => option.value)
+          }));
+        }}/>
 
         <button type="submit" className="signup-btn">Sign Up</button>
       </form>
