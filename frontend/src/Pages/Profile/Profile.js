@@ -9,8 +9,8 @@ import Select from 'react-select';
 const Profile = ({ user, onUpdate }) => {
   const [formData, setFormData] = useState({
     username: user.username || '',
-    date_of_birth: user.dob || '',
-    phone_number: user.phone || '',
+    date_of_birth: user.date_of_birth || '',
+    phone_number: user.phone_number || '',
     location: user.location || '',
     preferences: user.preferences || [],
     //profilePic: user.profilePic || '',
@@ -107,7 +107,7 @@ const Profile = ({ user, onUpdate }) => {
       <input type="text" name="location" value={formData.location} onChange={handleChange} />
 
       <label>Interests</label>
-      <Select options = {options} isMulti name="preferences" 
+      <Select options = {options} isMulti name="preferences" value={options.filter(option => formData.preferences.includes(option.value))} 
         onChange={(selectedOptions) => {
           setFormData(prev => ({
             ...prev, preferences: selectedOptions.map(option => option.value)
