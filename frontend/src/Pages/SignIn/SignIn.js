@@ -1,58 +1,64 @@
 import React, { useState } from 'react';
+import { auth, db } from '../../firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
-import { Link } from 'react-router-dom';
 import './SignIn.css';
 
 const SignIn = ({ onLogin }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const navigate = useNavigate();
-  const [showPassword, setShowPassword] = useState(false);
 
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
-
-  const handleSubmit = (e) => {
+  const handleSignIn = async (e) => {
     e.preventDefault();
-    
-    if (username === 'test' && password === 'test@69') {
-      const userData = { username: 'test', email: 'test@example.com' };
-      onLogin(userData);
-      navigate('/profile');
-    } else {
-      alert('Invalid username or password!');
+    setError('');
+
+    try {
+      const user = {
+        username: username,
+        password: password
+      }
+      const response = await fetch('http://localhost:5001/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(user)
+      });
+
+      const data = await response.json();
+
+      if (response.status === 200) {
+        // Login successful
+        localStorage.setItem('user', JSON.stringify(data.user));
+        onLogin(data.user)
+        navigate('/profile');
+      } else {
+        setError(data.message || 'Login failed.');
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Server error. Please try again later.');
     }
   };
 
   return (
     <div className="signin-container">
       <h2>Sign In</h2>
-      <form className="signin-form" onSubmit={handleSubmit}>
+      <form className="signin-form" onSubmit={handleSignIn}>
         <label>Username</label>
-        <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} required />
+        <input value={username} onChange={(e) => setUsername(e.target.value)} required />
 
         <label>Password</label>
-        <input
-            type={showPassword ? 'text' : 'password'}
-            placeholder="Enter your password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-          <button
-            type="button"
-            className="show-password-btn"
-            onClick={togglePasswordVisibility}
-          >
-            {showPassword ? 'Hide' : 'Show'}
-          </button>
+        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
 
         <button type="submit" className="signin-btn">Login</button>
       </form>
-      <p className="signup-link">
-        Don't have an account? <Link to="/signup">Sign Up</Link>
-      </p>
+
+      {error && <p className="error">{error}</p>}
     </div>
   );
 };

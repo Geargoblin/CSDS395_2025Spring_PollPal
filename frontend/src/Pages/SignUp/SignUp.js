@@ -1,95 +1,100 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import PhoneInput from 'react-phone-input-2';
-import 'react-phone-input-2/lib/style.css';
-import ReactCrop from 'react-image-crop';
-import 'react-image-crop/dist/ReactCrop.css';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
+import { auth, db } from '../../firebase';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+import { useNavigate, Link } from 'react-router-dom';
 import './SignUp.css';
+import Select from 'react-select';
 
-const SignUp = () => {
-  const [image, setImage] = useState(null);
-  const [crop, setCrop] = useState({ aspect: 1 });
-  const [croppedImage, setCroppedImage] = useState(null);
-  const [dob, setDob] = useState(null);
-  const [phone, setPhone] = useState('');
+const SignUp = ({onLogin}) => {
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
     username: '',
     email: '',
     password: '',
+    date_of_birth: '',
+    phone_number: '',
+    location: '',
+    preferences: [],
   });
-   const [showPassword, setShowPassword] = useState(true);
-  
-    const togglePasswordVisibility = () => {
-      setShowPassword(!showPassword);
-    };
-  
 
-  const handleInputChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const options = [
+    { value: 'food', label: 'Food' },
+    { value: 'music', label: 'Music' },
+    { value: 'outdoors', label: 'Outdoors' },
+    { value: 'park', label: 'Park' },
+    { value: 'museum', label: 'Museum' },
+    { value: 'bar', label: 'Bar'},
+    { value: 'active', label: 'Active'},
+  ];
+
+  const navigate = useNavigate();
+  const [error, setError] = useState('');
+
+  const handleChange = (e) => {
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleImageChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setImage(URL.createObjectURL(e.target.files[0]));
+  const handleSignUp = async (e) => {
+    e.preventDefault();
+  
+    try {
+      const response = await fetch('http://localhost:5001/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+      });
+
+      const data = await response.json();
+
+      if (response.status === 201) {
+        // Registration successful, you could also log the user in here if needed
+        localStorage.setItem('user', JSON.stringify(data.user));
+        navigate('/profile');
+      } else {
+        setError(data.message || 'Registration failed.');
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Server error. Please try again later.');
     }
   };
 
   return (
     <div className="signup-container">
-      <h2>Sign Up</h2>
-
-      <form className="signup-form">
-        {/* Profile Picture Upload */}
-        <label>Profile Picture (Optional)</label>
-        <input type="file" accept="image/*" onChange={handleImageChange} />
-        {image && (
-          <ReactCrop src={image} crop={crop} onChange={setCrop} onComplete={(c) => setCroppedImage(c)} />
-        )}
-
-        {/* First Name & Last Name */}
-        <div className="name-fields">
-          <div>
-            <label>First Name *</label>
-            <input type="text" name="firstName" value={formData.firstName} onChange={handleInputChange} required />
-          </div>
-          <div>
-            <label>Last Name *</label>
-            <input type="text" name="lastName" value={formData.lastName} onChange={handleInputChange} required />
-          </div>
-        </div>
-
-        {/* Username */}
+      <h2>Create an Account</h2>
+      <form className="signup-form" onSubmit={handleSignUp}>
         <label>Username *</label>
-        <input type="text" name="username" value={formData.username} onChange={handleInputChange} required />
+        <input name="username" required onChange={handleChange} />
 
-        {/* Email */}
         <label>Email *</label>
-        <input type="email" name="email" value={formData.email} onChange={handleInputChange} required />
+        <input name="email" type="email" required onChange={handleChange} />
 
-        {/* Password */}
         <label>Password *</label>
-        <input type="password" name="password" value={formData.password} onChange={handleInputChange} required />
-        <button
-            type="button"
-            className="show-password-btn"
-            onClick={togglePasswordVisibility}
-          >
-            {showPassword ? 'Hide' : 'Show'}
-          </button>
-        {/* Date of Birth */}
+        <input name="password" type="password" required onChange={handleChange} />
+
         <label>Date of Birth *</label>
-        <DatePicker selected={dob} onChange={(date) => setDob(date)} dateFormat="yyyy-MM-dd" required />
+        <input name="date_of_birth" type="date" required onChange={handleChange} />
 
-        {/* Phone Number */}
-        <label>Phone Number (Optional)</label>
-        <PhoneInput country={'us'} value={phone} onChange={setPhone} />
+        <label>Phone (optional)</label>
+        <input name="phone_number" onChange={handleChange} />
 
-        <button type="submit" className="signup-btn">Create Account</button>
+        <label>Location</label>
+        <input name="location" onChange={handleChange} />
+
+        <label>Interests</label>
+        <Select options = {options} isMulti name="preferences" 
+        onChange={(selectedOptions) => {
+          setFormData(prev => ({
+            ...prev, preferences: selectedOptions.map(option => option.value)
+          }));
+        }}/>
+
+        <button style={{ paddingTop: '12px' }} type="submit" className="signup-btn">Sign Up</button>
       </form>
+
+      {error && <p className="error">{error}</p>}
 
       <p className="signin-link">
         Already have an account? <Link to="/signin">Sign In</Link>

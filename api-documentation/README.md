@@ -16,11 +16,11 @@ Creates a new user account and starts a session.
 {
   "username": "string",       // Required
   "email": "string",          // Required
-  "first_name": "string",     // Required
-  "last_name": "string",      // Required
   "password": "string",       // Required
-  "date_of_birth": "string",  // Optional, format not specified
-  "phone_number": "string"    // Optional
+  "date_of_birth": "string",  // Optional
+  "phone_number": "string",   // Optional
+  "preferences": ["string"],  // Optional, array of preference strings
+  "location": "string"        // Optional, location as a string
 }
 ```
 
@@ -33,8 +33,10 @@ Creates a new user account and starts a session.
     "id": "string",
     "username": "string",
     "email": "string",
-    "first_name": "string",
-    "last_name": "string"
+    "preferences": ["string"],
+    "location": "string",
+    "liked_places": ["string"],
+    "disliked_places": ["string"]
   }
 }
 ```
@@ -86,8 +88,10 @@ Authenticates a user and starts a session.
     "id": "string",
     "username": "string",
     "email": "string",
-    "first_name": "string",
-    "last_name": "string"
+    "preferences": ["string"],
+    "liked_places": ["string"],
+    "disliked_places": ["string"],
+    "location": "string"
   }
 }
 ```
@@ -131,7 +135,7 @@ Ends the current user session.
 ```
 
 ### Get Current User
-Retrieves the currently authenticated user's information.
+Retrieves the currently authenticated user's information including detailed place data.
 
 - **URL**: `/api/auth/me`
 - **Method**: `GET`
@@ -145,8 +149,22 @@ Retrieves the currently authenticated user's information.
     "id": "string",
     "username": "string",
     "email": "string",
-    "first_name": "string",
-    "last_name": "string"
+    "preferences": ["string"],
+    "location": "string",
+    "liked_places": [
+      {
+        "Address": "string",
+        "Google Types": "string",
+        "Name": "string",
+        "Place ID": "string",
+        "Price": "string",
+        "Rating": number,
+        "Restaurant Type": "string",
+        "User Ratings Total": number,
+        "_id": "string"
+      }
+    ],
+    "disliked_places": ["string"]
   }
 }
 ```
@@ -166,6 +184,219 @@ Retrieves the currently authenticated user's information.
     "message": "User not found"
   }
   ```
+
+## User Management Endpoints
+
+### Update User Information
+Updates one or more fields of the current user's information.
+
+- **URL**: `/api/user/update`
+- **Method**: `PUT`
+- **Authentication**: Requires an active session
+- **Content-Type**: `application/json`
+
+**Request Body**:
+```json
+{
+  "username": "string",       // Optional
+  "email": "string",          // Optional
+  "password": "string",       // Optional
+  "date_of_birth": "string",  // Optional
+  "phone_number": "string",   // Optional
+  "preferences": ["string"],  // Optional, array of preference strings
+  "location": "string"        // Optional, location as a string
+}
+```
+
+**Notes**:
+- You only need to include the fields you want to update
+- Any fields not included or set to null will not be modified
+- Username and email must be unique across all users
+
+**Successful Response** (Status Code: 200):
+```json
+{
+  "status": "success",
+  "message": "User information updated successfully",
+  "user": {
+    "id": "string",
+    "username": "string",
+    "email": "string",
+    "preferences": ["string"],
+    "liked_places": ["string"],
+    "disliked_places": ["string"],
+    "location": "string",
+    "date_of_birth": "string",
+    "phone_number": "string"
+  }
+}
+```
+
+**Error Responses**:
+- Not authenticated (Status Code: 401):
+  ```json
+  {
+    "status": "error",
+    "message": "Not authenticated"
+  }
+  ```
+- Validation error (Status Code: 400):
+  ```json
+  {
+    "status": "error",
+    "message": "Username already exists" // Or other specific error message
+  }
+  ```
+- No valid fields (Status Code: 400):
+  ```json
+  {
+    "status": "error",
+    "message": "No valid fields to update"
+  }
+  ```
+- Server error (Status Code: 500):
+  ```json
+  {
+    "status": "error",
+    "message": "Error updating user information: Error details"
+  }
+  ```
+
+## Places Management Endpoints
+
+### Like a Place
+Adds a place to the user's liked places list.
+
+- **URL**: `/api/user/places/like/<place_id>`
+- **Method**: `POST`
+- **Authentication**: Requires an active session
+
+**Successful Response** (Status Code: 200):
+```json
+{
+  "status": "success",
+  "message": "Place added to liked places"
+}
+```
+
+**Error Responses**:
+- Not authenticated (Status Code: 401):
+  ```json
+  {
+    "status": "error",
+    "message": "Not authenticated"
+  }
+  ```
+- Action failure (Status Code: 400):
+  ```json
+  {
+    "status": "error",
+    "message": "Failed to like place"
+  }
+  ```
+- Server error (Status Code: 500):
+  ```json
+  {
+    "status": "error",
+    "message": "Error liking place: Error details"
+  }
+  ```
+
+### Dislike a Place
+Adds a place to the user's disliked places list.
+
+- **URL**: `/api/user/places/dislike/<place_id>`
+- **Method**: `POST`
+- **Authentication**: Requires an active session
+
+**Successful Response** (Status Code: 200):
+```json
+{
+  "status": "success",
+  "message": "Place added to disliked places"
+}
+```
+
+**Error Responses**:
+- Not authenticated (Status Code: 401):
+  ```json
+  {
+    "status": "error",
+    "message": "Not authenticated"
+  }
+  ```
+- Action failure (Status Code: 400):
+  ```json
+  {
+    "status": "error",
+    "message": "Failed to dislike place"
+  }
+  ```
+- Server error (Status Code: 500):
+  ```json
+  {
+    "status": "error",
+    "message": "Error disliking place: Error details"
+  }
+  ```
+
+### Reset Place Status
+Removes a place from both liked and disliked lists.
+
+- **URL**: `/api/user/places/reset/<place_id>`
+- **Method**: `POST`
+- **Authentication**: Requires an active session
+
+**Successful Response** (Status Code: 200):
+```json
+{
+  "status": "success",
+  "message": "Place removed from liked/disliked places"
+}
+```
+
+**Error Responses**:
+- Not authenticated (Status Code: 401):
+  ```json
+  {
+    "status": "error",
+    "message": "Not authenticated"
+  }
+  ```
+- Action failure (Status Code: 400):
+  ```json
+  {
+    "status": "error",
+    "message": "Failed to reset place status"
+  }
+  ```
+- Server error (Status Code: 500):
+  ```json
+  {
+    "status": "error",
+    "message": "Error resetting place status: Error details"
+  }
+  ```
+
+## Places Retrieval Endpoint
+
+### Get Places
+Retrieves a list of available places.
+
+- **URL**: `/places`
+- **Method**: `GET`
+
+**Successful Response** (Status Code: 200):
+```json
+[
+  {
+    "name": "string",
+    "description": "string",
+    "image": "string",
+    "categories": ["string"]
+  }
+]
+```
 
 ## Utility Endpoints
 
@@ -219,3 +450,12 @@ Test connection to MongoDB and list available collections.
 3. **Authentication Flow**:
    - After successful registration or login, the current user can be accessed via `/api/auth/me`
    - The session persists until logout is called or the session expires
+
+4. **Places Management**:
+   - Users can like, dislike, or reset their opinion on places
+   - Liked places are returned with complete details in the `/api/auth/me` endpoint
+   - Place data includes details such as Address, Name, Rating, Price, etc.
+
+5. **User Updates**:
+   - Use the unified `/api/user/update` endpoint to update any user attributes
+   - Only send the fields you want to change in your request
