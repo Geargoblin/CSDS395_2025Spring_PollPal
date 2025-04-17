@@ -93,7 +93,9 @@ def register():
                 "preferences": user['preferences'],
                 "location": user.get('location'),
                 "liked_places": user.get('liked_places', []),
-                "disliked_places": user.get('disliked_places', [])
+                "disliked_places": user.get('disliked_places', []),
+                "date_of_birth": user.get('date_of_birth'),
+                "phone_number": user.get('phone_number')
             }
         }), 201
         
@@ -144,7 +146,9 @@ def login():
                 "preferences": user.get('preferences', []),
                 "liked_places": user.get('liked_places', []),
                 "disliked_places": user.get('disliked_places', []),
-                "location": user.get('location')
+                "location": user.get('location'),
+                "date_of_birth": user.get('date_of_birth'),
+                "phone_number": user.get('phone_number')
             }
         })
         
@@ -198,7 +202,9 @@ def get_current_user():
                 "preferences": user.get('preferences', []),
                 "liked_places": user.get('liked_places', []),
                 "disliked_places": user.get('disliked_places', []),
-                "location": user.get('location')
+                "location": user.get('location'),
+                "date_of_birth": user.get('date_of_birth'),
+                "phone_number": user.get('phone_number')
             }
         })
     except Exception as e:
