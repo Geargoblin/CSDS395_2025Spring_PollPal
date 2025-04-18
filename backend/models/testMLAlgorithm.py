@@ -55,7 +55,7 @@ def score_places_for_user(user_id: int, mongo_uri: str = "mongodb://localhost:27
 
         # Already liked/disliked penalty
         if place_id in liked_place_ids or place_id in disliked_place_ids:
-            score -= 10
+            score -= 30
 
         # Category match with liked/disliked categories
         liked_cat_boost = liked_cat_counts.get(category, 0) / 20.0
