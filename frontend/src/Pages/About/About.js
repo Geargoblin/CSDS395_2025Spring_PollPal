@@ -62,24 +62,30 @@ const developers = [
 
 const About = () => {
   return (
-    <div className="about-container">
-      <h1>About PollPal</h1>
-      <p>
-        PollPal is an activity recommendation platform that helps users discover amazing places around them. 
-        Whether you're looking for restaurants, parks, or cultural spots, PollPal suggests personalized options 
-        based on your preferences.
-      </p>
+    <div className="bg-gray-100 min-h-screen p-8">
+      <div className="max-w-7xl mx-auto bg-white rounded-xl shadow-xl p-8">
+        <h1 className="text-4xl font-bold text-center text-blue-600 mb-6">About PollPal</h1>
+        <p className="text-lg text-gray-700 mb-6">
+          PollPal is an activity recommendation platform that helps users discover amazing places around them. 
+          Whether you're looking for restaurants, parks, or cultural spots, PollPal suggests personalized options 
+          based on your preferences.
+        </p>
 
-      <h2>Meet the Developers</h2>
-      <div className="developer-grid">
-        {developers.map((dev, index) => (
-          <div key={index} className="developer-card">
-            <img src={dev.image} alt={`${dev.name}`} />
-            <h3>{dev.name}</h3>
-            <p className="dev-title">{dev.title}</p>
-            <p className="dev-desc">{dev.description}</p>
-          </div>
-        ))}
+        <h2 className="text-3xl font-semibold text-center text-gray-800 mb-8">Meet the Developers</h2>
+
+        {/* Developer Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+          {developers.map((dev, index) => (
+            <div key={index} className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300">
+              <div className="flex flex-col items-center">
+                <img src={dev.image} alt={dev.name} className="w-32 h-32 object-cover rounded-full mb-4 border-4 border-blue-500" />
+                <h3 className="text-xl font-semibold text-gray-800">{dev.name}</h3>
+                <p className="text-md text-gray-600 mb-2">{dev.title}</p>
+                <p className="text-sm text-gray-500">{dev.description}</p>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
