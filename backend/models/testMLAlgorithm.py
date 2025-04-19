@@ -4,13 +4,13 @@ import math
 from pymongo import MongoClient
 from collections import Counter
 
+from . import db
+
 # Sigmoid function to convert raw score to probability
 def sigmoid(x):
     return 1 / (1 + math.exp(-x))
 
-def score_places_for_user(user_id: int, mongo_uri: str = "mongodb://localhost:27017/"):
-    client = MongoClient(mongo_uri)
-    db = client["your_database_name"]
+def score_places_for_user(user_id: int):
 
     users_col = db["Users"]
     places_col = db["Places"]
