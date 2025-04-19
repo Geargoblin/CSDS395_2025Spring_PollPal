@@ -46,16 +46,18 @@ def score_places_for_user(user_id: int, mongo_uri: str = "mongodb://localhost:27
             score += 2.0
 
         # Normalize likes (log-scale)
-        score += math.log(likes + 1)
+        score += math.log(likes + 1) * 5
 
         # Like/dislike ratio boost
         if (likes + dislikes) > 0:
             ratio = likes / (likes + dislikes)
-            score += ratio * 2
+            score += ratio * 4
+        else:
+            score += 4
 
         # Already liked/disliked penalty
         if place_id in liked_place_ids or place_id in disliked_place_ids:
-            score -= 30
+            score -= 60
 
         # Category match with liked/disliked categories
         liked_cat_boost = liked_cat_counts.get(category, 0) / 20.0
