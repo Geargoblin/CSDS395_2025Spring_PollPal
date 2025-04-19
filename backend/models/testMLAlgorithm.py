@@ -1,66 +1,84 @@
-from pymongo import MongoClient
+# filepath: src/sort_places.py
+
 import math
-from datetime import datetime, timedelta
+from pymongo import MongoClient
+from collections import Counter
 
-# Database Setup (Will probably need to update variable names)
-client = MongoClient("mongodb://localhost:27017/")
-db = client["recommendation_app"]
-posts_col = db["posts"]
-users_col = db["users"]
+from . import db
 
-# Helper function, normalizes probs
-def normalize_probs(probs):
-    total = sum(probs.values())
-    return {k: v / total for k, v in probs.items()}
+# Sigmoid function to convert raw score to probability
+def sigmoid(x):
+    return 1 / (1 + math.exp(-x))
 
-# Alters user prior probability, affecting what posts they will see first
-def update_user_prior(user_id, category_clicked):
+def score_places_for_user(user_id: int):
+
+    users_col = db["Users"]
+    places_col = db["Places"]
+
     user = users_col.find_one({"user_id": user_id})
-    priors = user["category_prior"]
-    priors[category_clicked] += 0.05
-    priors = normalize_probs(priors)
-    users_col.update_one({"user_id": user_id}, {"$set": {"category_prior": priors}})
+    if not user:
+        raise ValueError("User not found")
 
-# Gives ever post a score, allowing them to be sorted based on user history
-def score_post(post, priors, last_viewed_category=None):
-    category_score = priors.get(post["category"], 0.0)
+    preferences = set(user.get("preferences", []))
+    liked_place_ids = set(user.get("liked_places", []))
+    disliked_place_ids = set(user.get("disliked_places", []))
 
-    rating_score = (post.get("rating", 0.0) / 5.0) * 0.3
-    review_score = math.log1p(post.get("num_reviews", 0)) * 0.1
+    liked_places = list(places_col.find({"place_id": {"$in": list(liked_place_ids)}}))
+    disliked_places = list(places_col.find({"place_id": {"$in": list(disliked_place_ids)}}))
 
-    recency_bonus = 0
-    if last_viewed_category and last_viewed_category == post["category"]:
-        time_decay = max(0, 1 - (datetime.utcnow() - post.get("created_at", datetime.utcnow())).days / 7)
-        recency_bonus = 0.2 * time_decay
+    liked_cat_counts = Counter([p["category"] for p in liked_places])
+    disliked_cat_counts = Counter([p["category"] for p in disliked_places])
 
-    return category_score + rating_score + review_score + recency_bonus
+    all_places = list(places_col.find())
 
-# Gets posts and places them in the order the user should see them
-def get_ranked_posts(user_id):
-    user = users_col.find_one({"user_id": user_id})
-    viewed_posts = set(user.get("viewed_posts", []))
-    priors = user["category_prior"]
-    last_viewed_cat = user.get("last_viewed_category")
+    results = []
 
-    posts = list(posts_col.find())
-    ranked = []
+    for place in all_places:
+        score = 0.0
 
-    for post in posts:
-        if post["post_id"] in viewed_posts:
-            continue
-        score = score_post(post, priors, last_viewed_cat)
-        ranked.append((post, score))
+        place_id = place["place_id"]
+        category = place.get("category", "")
+        likes = place.get("likes", 0)
+        dislikes = place.get("dislikes", 0)
 
-    ranked.sort(key=lambda x: x[1], reverse=True)
-    return [p for p, _ in ranked]
+        # Preference boost
+        if category in preferences:
+            score += 2.0
 
-# viewed posts are removed from the list so that users will see new things
-def mark_post_viewed(user_id, post_id, category):
-    users_col.update_one(
-        {"user_id": user_id},
-        {
-            "$addToSet": {"viewed_posts": post_id},
-            "$set": {"last_viewed_category": category}
-        }
-    )
-    update_user_prior(user_id, category)
+        # Normalize likes (log-scale)
+        score += math.log(likes + 1) * 5
+
+        # Like/dislike ratio boost
+        if (likes + dislikes) > 0:
+            ratio = likes / (likes + dislikes)
+            score += ratio * 4
+        else:
+            score += 4
+
+        # Already liked/disliked penalty
+        if place_id in liked_place_ids or place_id in disliked_place_ids:
+            score -= 60
+
+        # Category match with liked/disliked categories
+        liked_cat_boost = liked_cat_counts.get(category, 0) / 20.0
+        disliked_cat_penalty = disliked_cat_counts.get(category, 0) / 20.0
+        score += liked_cat_boost
+        score -= disliked_cat_penalty
+
+        probability = sigmoid(score)
+
+        results.append({
+            "place_id": place_id,
+            "name": place["name"],
+            "score": probability,
+            "category": category
+        })
+
+    results.sort(key=lambda x: x["score"], reverse=True)
+    return results
+
+# Example usage
+if __name__ == "__main__":
+    sorted_places = score_places_for_user(user_id=123)
+    for p in sorted_places[:10]:
+        print(f"{p['name']} ({p['category']}): {p['score']:.4f}")
