@@ -69,9 +69,9 @@ def score_places_for_user(user_id: int):
 
         results.append({
             "place_id": place_id,
-            "name": place["name"],
-            "score": probability,
-            "category": category
+            # "name": place["name"],
+            # "score": probability,
+            # "category": category
         })
 
     #Sorts the places and returns the first 10
