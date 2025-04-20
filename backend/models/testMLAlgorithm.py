@@ -1,4 +1,4 @@
-# filepath: src/sort_places.py
+# filepath: /backend/models/testMLAlgorithm.py
 
 import math
 from pymongo import MongoClient
@@ -74,8 +74,9 @@ def score_places_for_user(user_id: int):
             "category": category
         })
 
+    #Sorts the places and returns the first 10
     results.sort(key=lambda x: x["score"], reverse=True)
-    return results
+    return results[:10]
 
 # Example usage
 if __name__ == "__main__":
