@@ -1,0 +1,12 @@
+const allInterests = [ "Reading", "Gaming", "Cooking", "Traveling", "Photography", "Coding", "Fitness", "Art", 
+  "Music", "Hiking", "Baking", "Swimming", "Blogging", "Writing", "Dancing", "Cycling", "Fishing", "Singing", 
+  "Gardening", "Fashion", "Movies", "Volunteering", "Tech", "Yoga", "Astrology", "Food", "Comics", "Meditation", 
+  "Basketball", "Soccer", "Anime", "Chess", "Skating", "Podcasts", "DIY", "Running", "Pets", "Crafts", "Design",
+   "Public Speaking", "Astronomy", "Finance", "Science", "History", "Spirituality", "Theater", "Board Games", 
+   "Architecture", "Bird Watching", "Languages", "Coding Challenges", "Social Media", "Interior Design", "Camping", 
+   "Poetry", "Karaoke", "Entrepreneurship", "Martial Arts", "Stand-up Comedy", "Horseback Riding", "Puzzles", "Tennis", 
+   "Cricket", "Geopolitics", "Makeup", "Robotics", "Painting", "Cosplay", "Programming", "Graphic Design", "Investing", 
+   "DIY Electronics", "Vlogging", "Writing Novels", "Dogs", "Cats", "Home Brewing", "Biking", "Calligraphy", "Rock Climbing", 
+   "Skateboarding", "Horror Movies", "Star Wars", "Marvel", "Nail Art", "Jewelry Making", "Tattoo Art", "Minimalism", "Parkour", 
+   "LARP", "Web Dev", "Productivity", "Self Help", "Philosophy", "Neuroscience", "Machine Learning", "Artificial Intelligence", 
+   "UX Design", "Sound Design", "Beatboxing", "3D Printing", "Film Editing" ];

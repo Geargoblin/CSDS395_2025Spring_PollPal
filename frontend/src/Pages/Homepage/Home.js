@@ -1,14 +1,28 @@
 import React from 'react';
-
 import './Home.css';
 
 const Home = () => {
   return (
-    <div className="home">
-      <div className="home-content">
-        <h1>Welcome to PollPal</h1>
-        <p>PollPal is a recommendation app that suggests activities in the user’s local area. The user will be able to select the category of activity they are looking for, and they will be presented with options in their local area one at a time. If the user likes the recommendation, they can swipe right to save the recommendation. If they don’t like the recommendation, they can swipe left. After each swipe, a new recommendation will be presented automatically. The options that are recommended will be selected by analyzing the user’s previous likes and dislikes and suggesting options they may like based on their preferences. After the user has finished swiping through recommendations, they can go back and look at their saved activities at any time. If the user doesn’t want to swipe through recommendations, they can also view a list of trending activities in their area within any category based on other users’ swipes. 
+    <div className="min-h-screen bg-gradient-to-r from-blue-500 via-teal-500 to-purple-600 flex items-center justify-center">
+      <div className="text-center p-6 sm:p-12 md:p-16 bg-white bg-opacity-80 rounded-lg shadow-xl max-w-4xl w-full">
+        <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-6">
+          Welcome to PollPal
+        </h1>
+        <p className="text-lg text-gray-800 mb-8">
+          PollPal is a recommendation app that suggests activities in the user’s local area. You can select the category of activity you're looking for, and we'll present personalized recommendations based on your preferences. You can swipe right to save or left to dismiss recommendations, and easily view your saved activities later.
         </p>
+        <div className="flex justify-center gap-6">
+          <a href="/signup">
+            <button className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-full transition duration-300 transform hover:bg-blue-700 hover:scale-105">
+              Sign Up Now
+            </button>
+          </a>
+          <a href="/pollpal">
+            <button className="px-6 py-3 bg-green-600 text-white font-semibold rounded-full transition duration-300 transform hover:bg-green-700 hover:scale-105">
+              Explore PollPal
+            </button>
+          </a>
+        </div>
       </div>
     </div>
   );

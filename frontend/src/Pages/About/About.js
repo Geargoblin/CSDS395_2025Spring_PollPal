@@ -3,7 +3,11 @@ import './About.css';
 import image1 from '../../Photos/gautam.png';
 import image2 from '../../Photos/leo.png';
 import image3 from '../../Photos/profile_pic_parv.jpeg';
-import image4 from '../../Photos/stephen.png'
+import image4 from '../../Photos/stephen.png';
+import image5 from '../../Photos/Michael.jpg';
+import image6 from '../../Photos/tom.jpeg';
+import image7 from '../../Photos/Max.png';
+import image8 from '../../Photos/jacob.jpeg';
 
 const developers = [
   {
@@ -28,6 +32,30 @@ const developers = [
     name: "Stephen ",
     title: "Backend Developer",
     image: image4,
+    description: "Enter Description Here"
+  },
+  {
+    name: "Michael Warner",
+    title: "Frontend Developer",
+    image: image5,
+    description: "Enter Description Here"
+  },
+  {
+    name: "Tom Than",
+    title: "Backend Developer",
+    image: image6,
+    description: "Enter Description Here"
+  },
+  {
+    name: "Max Zweiback",
+    title: "Frontend Developer",
+    image: image7,
+    description: "Enter Description Here"
+  },
+  {
+    name: "Jacob Hall",
+    title: "Backend Developer",
+    image: image8,
     description: "Enter Description Here"
   }
 ];

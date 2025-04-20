@@ -10,7 +10,7 @@ import DescriptionPage from './Pages/DescriptionPage/DescriptionPage';
 import Contact from './Pages/Contact/Contact';
 import PrivateRoute from './Components/PrivateRoute/PrivateRoute';
 import About from './Pages/About/About';
-
+import ProfilePage from './Pages/ProfilePage/ProfilePage';
 
 function App() {
     const [user, setUser] = useState(null);
@@ -37,6 +37,8 @@ function App() {
         <Routes>
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/show-profile" element={<ProfilePage />} />
+
           <Route path="/" element={<Home />} />
           <Route path="/pollpal" element={
               <PrivateRoute user={user}>
