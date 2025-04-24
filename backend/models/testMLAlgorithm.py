@@ -49,7 +49,7 @@ def score_places_for_user(user_id: int):
         # Normalize likes (log-scale)
         score += math.log(likes + 1) * 5
 
-        # Like/dislike ratio boost
+        # Like/dislike ratio boost (Need to modify to work with ratings)
         if (likes + dislikes) > 0:
             ratio = likes / (likes + dislikes)
             score += ratio * 4
@@ -61,18 +61,22 @@ def score_places_for_user(user_id: int):
             score -= 60
 
         # Category match with liked/disliked categories
-        liked_cat_boost = liked_cat_counts.get(category, 0) / 20.0
-        disliked_cat_penalty = disliked_cat_counts.get(category, 0) / 20.0
+        liked_cat_boost = liked_cat_counts.get(category, 0) / 10.0
+        disliked_cat_penalty = disliked_cat_counts.get(category, 0) / 10.0
         score += liked_cat_boost
         score -= disliked_cat_penalty
 
         probability = sigmoid(score)
 
         results.append({
-            "place_id": place_id,
             "name": place["Name"],
-            "score": probability,
-            "category": category
+            "address": place["Address"],
+            "rating": place["Rating"],
+            "user Ratings Total": place["User Ratings Total"],
+            "price": place["Price"],
+            "restaurant type": category,
+            "google types": place["Google Types"],
+            "score": probability
         })
 
     #Sorts the places and returns the first 10
