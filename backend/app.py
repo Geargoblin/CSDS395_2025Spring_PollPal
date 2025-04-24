@@ -6,6 +6,7 @@ from models.user import (
     add_liked_place, add_disliked_place, remove_place_from_lists,
     get_user_details, update_user
 )
+from models.testMLAlgorithm import score_places_for_user
 import config
 from datetime import datetime
 from bson import ObjectId
@@ -416,6 +417,27 @@ places = [
 @app.route('/places', methods=['GET'])
 def get_places():
     return jsonify(places)
+
+@app.route('/api/match', methods=['GET'])
+def get_matched_places():
+    if 'user_id' not in session:
+        return jsonify({
+            "status": "error",
+            "message": "Not authenticated"
+        }), 401
+
+    try:
+        user_id = session['user_id']
+        results = score_places_for_user(user_id)
+        return jsonify({
+            "status": "success",
+            "matches": results
+        })
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": f"Failed to calculate matches: {str(e)}"
+        }), 500
 
 if __name__ == '__main__':
     app.run(port=5001, debug=app.config['DEBUG']) 
