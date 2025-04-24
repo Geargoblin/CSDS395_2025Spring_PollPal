@@ -44,25 +44,25 @@ def score_places_for_user(user_id: int):
 
         # Preference boost
         if category in preferences:
-            score += 2.0
+            score += 1.0
 
         # Normalize likes (log-scale)
-        score += math.log(likes + 1) * 5
+        score += math.log(likes + 1) / 8
 
         # Like/dislike ratio boost (Need to modify to work with ratings)
         if (likes + dislikes) > 0:
             ratio = likes / (likes + dislikes)
-            score += ratio * 4
+            score += ratio
         else:
-            score += 4
+            score += 0
 
         # Already liked/disliked penalty
         if place_id in liked_place_ids or place_id in disliked_place_ids:
             score -= 60
 
         # Category match with liked/disliked categories
-        liked_cat_boost = liked_cat_counts.get(category, 0) / 10.0
-        disliked_cat_penalty = disliked_cat_counts.get(category, 0) / 10.0
+        liked_cat_boost = liked_cat_counts.get(category, 0) / 20.0
+        disliked_cat_penalty = disliked_cat_counts.get(category, 0) / 20.0
         score += liked_cat_boost
         score -= disliked_cat_penalty
 
