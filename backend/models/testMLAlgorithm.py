@@ -73,7 +73,7 @@ def score_places_for_user(user_id: int):
             "address": place["Address"],
             "rating": place["Rating"],
             "user Ratings Total": place["User Ratings Total"],
-            "price": place["Price"],
+            "price": place.get("Price", "Unknown"),
             "restaurant type": category,
             "google types": place["Google Types"],
             "score": probability
