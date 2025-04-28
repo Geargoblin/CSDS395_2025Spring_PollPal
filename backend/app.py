@@ -279,12 +279,12 @@ def like_place(place_id):
     
     try:
         # Add place to liked places
-        success = add_liked_place(session['user_id'], place_id)
+        success, error_message = add_liked_place(session['user_id'], place_id)
         
         if not success:
             return jsonify({
                 "status": "error",
-                "message": "Failed to like place"
+                "message": error_message or "Failed to like place"
             }), 400
         
         return jsonify({
@@ -310,12 +310,12 @@ def dislike_place(place_id):
     
     try:
         # Add place to disliked places
-        success = add_disliked_place(session['user_id'], place_id)
+        success, error_message = add_disliked_place(session['user_id'], place_id)
         
         if not success:
             return jsonify({
                 "status": "error",
-                "message": "Failed to dislike place"
+                "message": error_message or "Failed to dislike place"
             }), 400
         
         return jsonify({
@@ -341,12 +341,12 @@ def reset_place(place_id):
     
     try:
         # Remove place from both lists
-        success = remove_place_from_lists(session['user_id'], place_id)
+        success, error_message = remove_place_from_lists(session['user_id'], place_id)
         
         if not success:
             return jsonify({
                 "status": "error",
-                "message": "Failed to reset place status"
+                "message": error_message or "Failed to reset place status"
             }), 400
         
         return jsonify({

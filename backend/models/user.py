@@ -5,6 +5,22 @@ from models import db
 # User collection reference
 users = db.Users
 
+def is_valid_object_id(id_string):
+    """
+    Check if a string is a valid MongoDB ObjectId
+    
+    Parameters:
+    - id_string: string to validate
+    
+    Returns:
+    - bool: True if valid, False otherwise
+    """
+    try:
+        ObjectId(id_string)
+        return True
+    except:
+        return False
+
 def create_user(username, email, password, date_of_birth, phone_number, preferences=None, location=None):
     """
     Create a new user in the database
@@ -90,6 +106,13 @@ def add_liked_place(user_id, place_id):
     Add a place to user's liked places list
     """
     try:
+        # Validate both IDs
+        if not is_valid_object_id(user_id):
+            return False, "Invalid user ID"
+            
+        if not is_valid_object_id(place_id):
+            return False, "Invalid place ID"
+            
         # Remove from disliked places if it exists there
         users.update_one(
             {"_id": ObjectId(user_id)},
@@ -106,15 +129,22 @@ def add_liked_place(user_id, place_id):
                 "$set": {"updated_at": datetime.utcnow()}
             }
         )
-        return result.modified_count > 0
-    except:
-        return False
+        return result.modified_count > 0, None
+    except Exception as e:
+        return False, str(e)
 
 def add_disliked_place(user_id, place_id):
     """
     Add a place to user's disliked places list
     """
     try:
+        # Validate both IDs
+        if not is_valid_object_id(user_id):
+            return False, "Invalid user ID"
+            
+        if not is_valid_object_id(place_id):
+            return False, "Invalid place ID"
+            
         # Remove from liked places if it exists there
         users.update_one(
             {"_id": ObjectId(user_id)},
@@ -131,15 +161,22 @@ def add_disliked_place(user_id, place_id):
                 "$set": {"updated_at": datetime.utcnow()}
             }
         )
-        return result.modified_count > 0
-    except:
-        return False
+        return result.modified_count > 0, None
+    except Exception as e:
+        return False, str(e)
 
 def remove_place_from_lists(user_id, place_id):
     """
     Remove a place from both liked and disliked lists
     """
     try:
+        # Validate both IDs
+        if not is_valid_object_id(user_id):
+            return False, "Invalid user ID"
+            
+        if not is_valid_object_id(place_id):
+            return False, "Invalid place ID"
+            
         result = users.update_one(
             {"_id": ObjectId(user_id)},
             {
@@ -150,9 +187,9 @@ def remove_place_from_lists(user_id, place_id):
                 "$set": {"updated_at": datetime.utcnow()}
             }
         )
-        return result.modified_count > 0
-    except:
-        return False
+        return result.modified_count > 0, None
+    except Exception as e:
+        return False, str(e)
 
 def get_user_liked_places(liked_place_ids):
     """
