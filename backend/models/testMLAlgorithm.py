@@ -12,7 +12,7 @@ def sigmoid(x):
 
 def score_places_for_user(user_id: str):
     users_col = db["Users"]
-    places_col = db["All_Places"]
+    places_col = db["New_Places"]
 
     user = get_user_by_id(user_id)
     if not user:
@@ -35,8 +35,8 @@ def score_places_for_user(user_id: str):
         except:
             continue
 
-    liked_places = list(db["All_Places"].find({"_id": {"$in": liked_place_object_ids}}))
-    disliked_places = list(db["All_Places"].find({"_id": {"$in": disliked_place_object_ids}}))
+    liked_places = list(db["New_Places"].find({"_id": {"$in": liked_place_object_ids}}))
+    disliked_places = list(db["New_Places"].find({"_id": {"$in": disliked_place_object_ids}}))
 
     # Map place IDs to their types (now using Matched Type instead of Restaurant Type)
     place_id_to_type = {}
@@ -64,7 +64,7 @@ def score_places_for_user(user_id: str):
     for idx, rtype in enumerate(reversed(disliked_types_ordered)):
         disliked_type_weights[rtype] += (len(disliked_types_ordered) - idx)
 
-    all_places = list(db["All_Places"].find())
+    all_places = list(db["New_Places"].find())
 
     results = []
 
@@ -73,8 +73,8 @@ def score_places_for_user(user_id: str):
 
         current_place_id = str(place["_id"])
         place_type = place.get("Matched Type", "Other").strip()
-        likes = place.get("User Ratings Total", 0)
-        rating = place.get("Rating", 0)
+        likes = place.get("User Ratings Total") or 0
+        rating = place.get("Rating") or 0
 
         # 1. Mild boost based on recent likes
         score += liked_type_weights.get(place_type, 0) * 1.1
@@ -106,13 +106,8 @@ def score_places_for_user(user_id: str):
             "price": place.get("Price", "Unknown"),
             "matched_type": place.get("Matched Type", "Other"),
             "google_types": place.get("Google Types", []),
-            "photo_1": place.get("Photo 1", ""),
-            "photo_2": place.get("Photo 2", ""),
-            "photo_3": place.get("Photo 3", ""),
-            "photo_4": place.get("Photo 4", ""),
-            "review_1": place.get("Review 1", ""),
-            "review_2": place.get("Review 2", ""),
-            "review_3": place.get("Review 3", ""),
+            "photos": place.get("Photos", []),
+            "reviews": place.get("Reviews", []),
             "score": probability
         })
 

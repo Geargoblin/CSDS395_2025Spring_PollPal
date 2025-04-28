@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from "react-router-dom";
 import './PollPal.css';
+import PhotoCarousel from '../../Components/PhotoCarousel.jsx';
+import Review from '../../Components/Review/Review.js';
 
 const PollPal = () => {
   const [places, setPlaces] = useState([]);
@@ -10,16 +12,41 @@ const PollPal = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetch('http://127.0.0.1:5001/places')
-      .then(response => response.json())
-      .then(data => setPlaces(data))
-      .catch(error => console.error("Error fetching places:", error));
+    getNextTen()
   }, []);
+
+  const getNextTen = async () => {
+    setError('');
+    try {
+      const url = "http://localhost:5001/api/match";
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      const data = await response.json();
+
+      if (response.status === 200) {
+        setPlaces(data.matches)
+      } else {
+        setError(data.message || 'Failed to fetch places.');
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Server error. Please try again later.');
+    }
+  };
 
   const handleNext = (direction) => {
     setSwipeDirection(direction);
     setTimeout(() => {
       setCurrentIndex((prevIndex) => (prevIndex + 1) % places.length);
+      if (currentIndex === 0) {
+        getNextTen();
+      }
       setSwipeDirection(null);
     }, 500); // Animation duration
   };
@@ -27,7 +54,7 @@ const PollPal = () => {
   const handleLike = async () => {
     setError('');
     try {
-      const url = "http://localhost:5001/api/user/places/like/" + places[currentIndex].name
+      const url = "http://localhost:5001/api/user/places/like/" + places[currentIndex].id
       const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -52,7 +79,7 @@ const PollPal = () => {
   const handleDislike = async () => {
     setError('');
     try {
-      const url = "http://localhost:5001/api/user/places/dislike/" + places[currentIndex].name
+      const url = "http://localhost:5001/api/user/places/dislike/" + places[currentIndex].id
       const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -78,7 +105,7 @@ const PollPal = () => {
 
   // Navigate when clicking anywhere in the card
   const handleCardClick = () => {
-    navigate(`/activity/${places[currentIndex].name}`, { state: { place: places[currentIndex] } });
+    navigate(`/activity/${places[currentIndex].id}`, { state: { place: places[currentIndex] } });
   };
 
   if (places.length === 0) return <p className="text-center text-lg text-gray-600">Loading...</p>;
@@ -99,7 +126,7 @@ const PollPal = () => {
       </div>
 
       {/* Activity Card Section */}
-      <div className="w-2/4 bg-white p-6 rounded-lg shadow-md flex flex-col items-center justify-center">
+      <div className="w-2/4 bg-white p-6 rounded-lg shadow-md flex flex-col items-center">
         <AnimatePresence>
           <motion.div
             key={places[currentIndex].name}
@@ -110,8 +137,8 @@ const PollPal = () => {
             transition={{ duration: 0.5 }}
             onClick={handleCardClick}
           >
-            <img src={places[currentIndex].image} alt={places[currentIndex].name} className="w-full h-48 object-cover rounded-lg mb-4" />
-            <h2 className="font-semibold text-2xl mb-2">{places[currentIndex].name}</h2>
+            <PhotoCarousel photos={places[currentIndex].photos} />
+            <h2 className="font-semibold text-2xl mb-2 text-center">{places[currentIndex].name}</h2>
             <p className="text-gray-600 mb-4">{places[currentIndex].description}</p>
             <div className="flex justify-between items-center">
               <button
@@ -135,9 +162,12 @@ const PollPal = () => {
       {/* Reviews Section */}
       <div className="w-1/4 bg-gray-100 p-6 rounded-lg shadow-md">
         <h3 className="font-semibold text-xl mb-4">Reviews</h3>
-        <div className="bg-white p-4 mb-2 rounded-lg shadow-sm">⭐⭐⭐⭐ Great place!</div>
-        <div className="bg-white p-4 mb-2 rounded-lg shadow-sm">⭐⭐ Average experience.</div>
-        <div className="bg-white p-4 mb-2 rounded-lg shadow-sm">⭐ Not worth it!</div>
+        {places[currentIndex].reviews.map((review, index) => (
+          <Review
+            key={index}
+            text={review}
+          />
+        ))}
       </div>
     </div>
   );

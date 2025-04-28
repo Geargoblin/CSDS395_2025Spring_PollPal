@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useParams } from "react-router-dom";
 import './DescriptionPage.css';
+import PhotoCarousel from '../../Components/PhotoCarousel';
 
 const DescriptionPage = (props) => {
     const [reviews, setReviews] = useState([]);
@@ -14,7 +15,7 @@ const DescriptionPage = (props) => {
             <div className='centered'>
                 <>
                     <h1 className='centered'>{place.name}</h1>
-                    <img src={place.image} alt={place.name} />
+                    <PhotoCarousel photos={[place.photo_1, place.photo_2, place.photo_3, place.photo_4]}/>
                     <div className='four-col'>
                         <p>Likes: {place.numLikes ?? "24"}</p>
                         <p>Rating: {place.starRating ?? "⭐⭐⭐⭐"}</p>
