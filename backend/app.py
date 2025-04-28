@@ -6,6 +6,7 @@ from models.user import (
     add_liked_place, add_disliked_place, remove_place_from_lists,
     get_user_details, update_user
 )
+from models.testMLAlgorithm import score_places_for_user
 import config
 from datetime import datetime
 from bson import ObjectId
@@ -93,7 +94,9 @@ def register():
                 "preferences": user['preferences'],
                 "location": user.get('location'),
                 "liked_places": user.get('liked_places', []),
-                "disliked_places": user.get('disliked_places', [])
+                "disliked_places": user.get('disliked_places', []),
+                "date_of_birth": user.get('date_of_birth'),
+                "phone_number": user.get('phone_number')
             }
         }), 201
         
@@ -144,7 +147,9 @@ def login():
                 "preferences": user.get('preferences', []),
                 "liked_places": user.get('liked_places', []),
                 "disliked_places": user.get('disliked_places', []),
-                "location": user.get('location')
+                "location": user.get('location'),
+                "date_of_birth": user.get('date_of_birth'),
+                "phone_number": user.get('phone_number')
             }
         })
         
@@ -198,7 +203,9 @@ def get_current_user():
                 "preferences": user.get('preferences', []),
                 "liked_places": user.get('liked_places', []),
                 "disliked_places": user.get('disliked_places', []),
-                "location": user.get('location')
+                "location": user.get('location'),
+                "date_of_birth": user.get('date_of_birth'),
+                "phone_number": user.get('phone_number')
             }
         })
     except Exception as e:
@@ -406,10 +413,31 @@ places = [
         "image": "https://scontent.fbkl1-1.fna.fbcdn.net/v/t39.30808-6/296404277_5842436765784617_7542443823342321004_n.jpg?_nc_cat=109&ccb=1-7&_nc_sid=cc71e4&_nc_ohc=Eam24OkVIEgQ7kNvgHPz640&_nc_oc=Adh1nzOBU2fBmwkKwkx3knwt4DehnJP8A5Sh77uXUu1Ughs7cWvtY8Zn-EvOf_70RPU&_nc_zt=23&_nc_ht=scontent.fbkl1-1.fna&_nc_gid=A8U3VraZFW4rU1-PIlitw9y&oh=00_AYGarNt-KnZSPx1u3PIE5XYaI_pKGnmMpDAjQSejtX5Eag&oe=67D0152F"
     }
 ]
-
+# ENDPOINT FOR RETRIEVING SAMPLE PLACES 
 @app.route('/places', methods=['GET'])
 def get_places():
     return jsonify(places)
+
+@app.route('/api/match', methods=['GET'])
+def get_matched_places():
+    if 'user_id' not in session:
+        return jsonify({
+            "status": "error",
+            "message": "Not authenticated"
+        }), 401
+
+    try:
+        user_id = session['user_id']
+        results = score_places_for_user(user_id)
+        return jsonify({
+            "status": "success",
+            "matches": results
+        })
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": f"Failed to calculate matches: {str(e)}"
+        }), 500
 
 if __name__ == '__main__':
     app.run(port=5001, debug=app.config['DEBUG']) 

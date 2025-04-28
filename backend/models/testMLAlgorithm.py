@@ -1,66 +1,143 @@
-from pymongo import MongoClient
 import math
-from datetime import datetime, timedelta
+import random
+from collections import Counter
+from bson import ObjectId
+from pymongo import MongoClient
 
-# Database Setup (Will probably need to update variable names)
-client = MongoClient("mongodb://localhost:27017/")
-db = client["recommendation_app"]
-posts_col = db["posts"]
-users_col = db["users"]
+from . import db
+from .user import get_user_by_id
 
-# Helper function, normalizes probs
-def normalize_probs(probs):
-    total = sum(probs.values())
-    return {k: v / total for k, v in probs.items()}
+def sigmoid(x):
+    return 1 / (1 + math.exp(-x))
 
-# Alters user prior probability, affecting what posts they will see first
-def update_user_prior(user_id, category_clicked):
-    user = users_col.find_one({"user_id": user_id})
-    priors = user["category_prior"]
-    priors[category_clicked] += 0.05
-    priors = normalize_probs(priors)
-    users_col.update_one({"user_id": user_id}, {"$set": {"category_prior": priors}})
+def score_places_for_user(user_id: str):
+    users_col = db["Users"]
+    places_col = db["All_Places"]
 
-# Gives ever post a score, allowing them to be sorted based on user history
-def score_post(post, priors, last_viewed_category=None):
-    category_score = priors.get(post["category"], 0.0)
+    user = get_user_by_id(user_id)
+    if not user:
+        raise ValueError("User not found")
 
-    rating_score = (post.get("rating", 0.0) / 5.0) * 0.3
-    review_score = math.log1p(post.get("num_reviews", 0)) * 0.1
+    liked_place_ids = list(user.get("liked_places", []))  # Keep order for recency
+    disliked_place_ids = list(user.get("disliked_places", []))
 
-    recency_bonus = 0
-    if last_viewed_category and last_viewed_category == post["category"]:
-        time_decay = max(0, 1 - (datetime.utcnow() - post.get("created_at", datetime.utcnow())).days / 7)
-        recency_bonus = 0.2 * time_decay
-
-    return category_score + rating_score + review_score + recency_bonus
-
-# Gets posts and places them in the order the user should see them
-def get_ranked_posts(user_id):
-    user = users_col.find_one({"user_id": user_id})
-    viewed_posts = set(user.get("viewed_posts", []))
-    priors = user["category_prior"]
-    last_viewed_cat = user.get("last_viewed_category")
-
-    posts = list(posts_col.find())
-    ranked = []
-
-    for post in posts:
-        if post["post_id"] in viewed_posts:
+    liked_place_object_ids = []
+    for pid in liked_place_ids:
+        try:
+            liked_place_object_ids.append(ObjectId(pid))
+        except:
             continue
-        score = score_post(post, priors, last_viewed_cat)
-        ranked.append((post, score))
 
-    ranked.sort(key=lambda x: x[1], reverse=True)
-    return [p for p, _ in ranked]
+    disliked_place_object_ids = []
+    for pid in disliked_place_ids:
+        try:
+            disliked_place_object_ids.append(ObjectId(pid))
+        except:
+            continue
 
-# viewed posts are removed from the list so that users will see new things
-def mark_post_viewed(user_id, post_id, category):
-    users_col.update_one(
-        {"user_id": user_id},
-        {
-            "$addToSet": {"viewed_posts": post_id},
-            "$set": {"last_viewed_category": category}
-        }
-    )
-    update_user_prior(user_id, category)
+    liked_places = list(db["All_Places"].find({"_id": {"$in": liked_place_object_ids}}))
+    disliked_places = list(db["All_Places"].find({"_id": {"$in": disliked_place_object_ids}}))
+
+    # Map place IDs to their types (now using Matched Type instead of Restaurant Type)
+    place_id_to_type = {}
+    for p in liked_places + disliked_places:
+        pid = str(p["_id"])
+        place_id_to_type[pid] = p.get("Matched Type", "Other").strip()
+
+    liked_types_ordered = []
+    for pid in liked_place_ids:
+        if pid in place_id_to_type:
+            liked_types_ordered.append(place_id_to_type[pid])
+
+    disliked_types_ordered = []
+    for pid in disliked_place_ids:
+        if pid in place_id_to_type:
+            disliked_types_ordered.append(place_id_to_type[pid])
+
+    # Recency-weighted counters
+    liked_type_weights = Counter()
+    disliked_type_weights = Counter()
+
+    for idx, rtype in enumerate(reversed(liked_types_ordered)):
+        liked_type_weights[rtype] += (len(liked_types_ordered) - idx)
+
+    for idx, rtype in enumerate(reversed(disliked_types_ordered)):
+        disliked_type_weights[rtype] += (len(disliked_types_ordered) - idx)
+
+    all_places = list(db["All_Places"].find())
+
+    results = []
+
+    for place in all_places:
+        score = 0.0
+
+        current_place_id = str(place["_id"])
+        place_type = place.get("Matched Type", "Other").strip()
+        likes = place.get("User Ratings Total", 0)
+        rating = place.get("Rating", 0)
+
+        # 1. Mild boost based on recent likes
+        score += liked_type_weights.get(place_type, 0) * 1.1
+
+        # 2. Mild penalty based on recent dislikes
+        score -= disliked_type_weights.get(place_type, 0) * 3.5
+
+        # 3. Quality scoring
+        if rating > 0:
+            score += rating * 1.5
+
+        if likes > 0:
+            score += math.log(likes + 1) * 1.2
+
+        # 4. Heavy penalty if already liked/disliked specific place
+        if current_place_id in liked_place_ids or current_place_id in disliked_place_ids:
+            score -= 100
+
+        # 5. Normalize
+        probability = sigmoid(score / 10.0)
+
+        # Building result with fields from All_Places schema
+        results.append({
+            "id": str(place["_id"]),
+            "name": place.get("Name", "Unknown"),
+            "address": place.get("Address", "Unknown"),
+            "rating": place.get("Rating", 0),
+            "user_ratings_total": place.get("User Ratings Total", 0),
+            "price": place.get("Price", "Unknown"),
+            "matched_type": place.get("Matched Type", "Other"),
+            "google_types": place.get("Google Types", []),
+            "photo_1": place.get("Photo 1", ""),
+            "photo_2": place.get("Photo 2", ""),
+            "photo_3": place.get("Photo 3", ""),
+            "photo_4": place.get("Photo 4", ""),
+            "review_1": place.get("Review 1", ""),
+            "review_2": place.get("Review 2", ""),
+            "review_3": place.get("Review 3", ""),
+            "score": probability
+        })
+
+    # ------------------------------
+    # Top matches + Explore Layer (NO shuffle)
+    # ------------------------------
+
+    results.sort(key=lambda x: x["score"], reverse=True)
+
+    top_results = []
+    seen_types = set()
+
+    # Pick up to 8 top matches with unique place types
+    for place in results:
+        if len(top_results) >= 8:
+            break
+        if place["matched_type"] not in seen_types:
+            top_results.append(place)
+            seen_types.add(place["matched_type"])
+
+    # Pick 2 random explore places from remaining
+    remaining_places = [p for p in results if p["matched_type"] not in seen_types]
+    random_explores = random.sample(remaining_places, min(2, len(remaining_places)))
+    
+    # Final results: top results first, then explore results (ordered by score)
+    final_results = top_results + sorted(random_explores, key=lambda x: x["score"], reverse=True)
+
+    return final_results
