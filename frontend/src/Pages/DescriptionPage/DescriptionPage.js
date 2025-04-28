@@ -15,7 +15,7 @@ const DescriptionPage = (props) => {
         <div>
             <div className='centered'>
                 <>
-                    <h1 className='centered'>{place.name}</h1>
+                    <h3 className='place-name'>{place.name}</h3>
                     <PhotoCarousel photos={place.photos} />
                     <div className='four-col'>
                         <p>Rating: {place.rating ?? "--"}</p>
@@ -23,10 +23,10 @@ const DescriptionPage = (props) => {
                         <p>Category: {place.matched_type ?? "Activity"}</p>
                         <p>Address: {place.address ?? "(Unavailable)"}</p>
                     </div>
-                    <p>{place.description}</p>
+                    <p className='centered-text'>{place.description}</p>
                 </>
             </div>
-            <h2>Reviews</h2>
+            <h2 className='section-header'>Reviews</h2>
             {place.reviews.map((review, index) => (
                 <Review
                     key={index}
