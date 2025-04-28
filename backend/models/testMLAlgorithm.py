@@ -10,7 +10,7 @@ from .user import get_user_by_id
 def sigmoid(x):
     return 1 / (1 + math.exp(-x))
 
-def score_places_for_user(user_id: str):
+def score_places_for_user(user_id: str, category: str = None):
     users_col = db["Users"]
     places_col = db["New_Places"]
 
@@ -64,8 +64,12 @@ def score_places_for_user(user_id: str):
     for idx, rtype in enumerate(reversed(disliked_types_ordered)):
         disliked_type_weights[rtype] += (len(disliked_types_ordered) - idx)
 
-    all_places = list(db["New_Places"].find())
-
+    # Get all places and filter by category if provided
+    all_places_query = {}
+    if category:
+        all_places_query["Google Types"] = {"$in": [category]}
+        
+    all_places = list(db["New_Places"].find(all_places_query))
     results = []
 
     for place in all_places:
@@ -118,22 +122,27 @@ def score_places_for_user(user_id: str):
 
     results.sort(key=lambda x: x["score"], reverse=True)
 
-    top_results = []
-    seen_types = set()
+    # If category is specified, simply return top 10 places
+    if category:
+        return results[:10]  # Return top 10 places by score
+    else:
+        # Apply diversity filtering only when no category is specified
+        top_results = []
+        seen_types = set()
 
-    # Pick up to 8 top matches with unique place types
-    for place in results:
-        if len(top_results) >= 8:
-            break
-        if place["matched_type"] not in seen_types:
-            top_results.append(place)
-            seen_types.add(place["matched_type"])
+        # Pick up to 8 top matches with unique place types
+        for place in results:
+            if len(top_results) >= 8:
+                break
+            if place["matched_type"] not in seen_types:
+                top_results.append(place)
+                seen_types.add(place["matched_type"])
 
-    # Pick 2 random explore places from remaining
-    remaining_places = [p for p in results if p["matched_type"] not in seen_types]
-    random_explores = random.sample(remaining_places, min(2, len(remaining_places)))
-    
-    # Final results: top results first, then explore results (ordered by score)
-    final_results = top_results + sorted(random_explores, key=lambda x: x["score"], reverse=True)
+        # Pick 2 random explore places from remaining
+        remaining_places = [p for p in results if p["matched_type"] not in seen_types]
+        random_explores = random.sample(remaining_places, min(2, len(remaining_places)))
+        
+        # Final results: top results first, then explore results (ordered by score)
+        final_results = top_results + sorted(random_explores, key=lambda x: x["score"], reverse=True)
 
-    return final_results
+        return final_results

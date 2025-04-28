@@ -428,7 +428,8 @@ def get_matched_places():
 
     try:
         user_id = session['user_id']
-        results = score_places_for_user(user_id)
+        category = request.args.get('category', None)
+        results = score_places_for_user(user_id, category)
         return jsonify({
             "status": "success",
             "matches": results
