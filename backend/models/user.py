@@ -171,8 +171,8 @@ def get_user_liked_places(liked_place_ids):
         # Convert string IDs back to ObjectId for MongoDB query
         liked_place_object_ids = [ObjectId(id_str) for id_str in liked_place_ids]
 
-        # Query the places
-        liked_places = list(db.Places.find({"_id": {"$in": liked_place_object_ids}}))
+        # Query the places from All_Places instead of Places
+        liked_places = list(db.All_Places.find({"_id": {"$in": liked_place_object_ids}}))
     
         # Convert ObjectIds to strings for serialization
         for place in liked_places:

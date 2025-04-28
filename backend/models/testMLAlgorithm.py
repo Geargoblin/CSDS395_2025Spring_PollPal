@@ -12,7 +12,7 @@ def sigmoid(x):
 
 def score_places_for_user(user_id: str):
     users_col = db["Users"]
-    places_col = db["Places"]
+    places_col = db["All_Places"]
 
     user = get_user_by_id(user_id)
     if not user:
@@ -35,14 +35,14 @@ def score_places_for_user(user_id: str):
         except:
             continue
 
-    liked_places = list(db["Places"].find({"_id": {"$in": liked_place_object_ids}}))
-    disliked_places = list(db["Places"].find({"_id": {"$in": disliked_place_object_ids}}))
+    liked_places = list(db["All_Places"].find({"_id": {"$in": liked_place_object_ids}}))
+    disliked_places = list(db["All_Places"].find({"_id": {"$in": disliked_place_object_ids}}))
 
-    # Map place IDs to their restaurant types
+    # Map place IDs to their types (now using Matched Type instead of Restaurant Type)
     place_id_to_type = {}
     for p in liked_places + disliked_places:
         pid = str(p["_id"])
-        place_id_to_type[pid] = p.get("Restaurant Type", "Other").strip()
+        place_id_to_type[pid] = p.get("Matched Type", "Other").strip()
 
     liked_types_ordered = []
     for pid in liked_place_ids:
@@ -64,7 +64,7 @@ def score_places_for_user(user_id: str):
     for idx, rtype in enumerate(reversed(disliked_types_ordered)):
         disliked_type_weights[rtype] += (len(disliked_types_ordered) - idx)
 
-    all_places = list(db["Places"].find())
+    all_places = list(db["All_Places"].find())
 
     results = []
 
@@ -72,15 +72,15 @@ def score_places_for_user(user_id: str):
         score = 0.0
 
         current_place_id = str(place["_id"])
-        restaurant_type = place.get("Restaurant Type", "Other").strip()
+        place_type = place.get("Matched Type", "Other").strip()
         likes = place.get("User Ratings Total", 0)
         rating = place.get("Rating", 0)
 
         # 1. Mild boost based on recent likes
-        score += liked_type_weights.get(restaurant_type, 0) * 1.1
+        score += liked_type_weights.get(place_type, 0) * 1.1
 
         # 2. Mild penalty based on recent dislikes
-        score -= disliked_type_weights.get(restaurant_type, 0) * 3.5
+        score -= disliked_type_weights.get(place_type, 0) * 3.5
 
         # 3. Quality scoring
         if rating > 0:
@@ -96,14 +96,23 @@ def score_places_for_user(user_id: str):
         # 5. Normalize
         probability = sigmoid(score / 10.0)
 
+        # Building result with fields from All_Places schema
         results.append({
+            "id": str(place["_id"]),
             "name": place.get("Name", "Unknown"),
             "address": place.get("Address", "Unknown"),
             "rating": place.get("Rating", 0),
-            "user Ratings Total": place.get("User Ratings Total", 0),
+            "user_ratings_total": place.get("User Ratings Total", 0),
             "price": place.get("Price", "Unknown"),
-            "restaurant type": restaurant_type,
-            "google types": place.get("Google Types", []),
+            "matched_type": place.get("Matched Type", "Other"),
+            "google_types": place.get("Google Types", []),
+            "photo_1": place.get("Photo 1", ""),
+            "photo_2": place.get("Photo 2", ""),
+            "photo_3": place.get("Photo 3", ""),
+            "photo_4": place.get("Photo 4", ""),
+            "review_1": place.get("Review 1", ""),
+            "review_2": place.get("Review 2", ""),
+            "review_3": place.get("Review 3", ""),
             "score": probability
         })
 
@@ -116,18 +125,18 @@ def score_places_for_user(user_id: str):
     top_results = []
     seen_types = set()
 
-    # Pick up to 8 top matches with unique restaurant types
+    # Pick up to 8 top matches with unique place types
     for place in results:
         if len(top_results) >= 8:
             break
-        if place["restaurant type"] not in seen_types:
+        if place["matched_type"] not in seen_types:
             top_results.append(place)
-            seen_types.add(place["restaurant type"])
+            seen_types.add(place["matched_type"])
 
     # Pick 2 random explore places from remaining
-    remaining_places = [p for p in results if p["restaurant type"] not in seen_types]
+    remaining_places = [p for p in results if p["matched_type"] not in seen_types]
     random_explores = random.sample(remaining_places, min(2, len(remaining_places)))
-
+    
     # Final results: top results first, then explore results (ordered by score)
     final_results = top_results + sorted(random_explores, key=lambda x: x["score"], reverse=True)
 
