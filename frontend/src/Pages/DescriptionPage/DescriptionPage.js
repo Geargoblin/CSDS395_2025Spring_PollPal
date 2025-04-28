@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useParams } from "react-router-dom";
 import './DescriptionPage.css';
 import PhotoCarousel from '../../Components/PhotoCarousel';
+import Review from '../../Components/Review/Review';
 
 const DescriptionPage = (props) => {
     const [reviews, setReviews] = useState([]);
@@ -15,19 +16,22 @@ const DescriptionPage = (props) => {
             <div className='centered'>
                 <>
                     <h1 className='centered'>{place.name}</h1>
-                    <PhotoCarousel photos={[place.photo_1, place.photo_2, place.photo_3, place.photo_4]}/>
+                    <PhotoCarousel photos={place.photos} />
                     <div className='four-col'>
-                        <p>Likes: {place.numLikes ?? "24"}</p>
-                        <p>Rating: {place.starRating ?? "⭐⭐⭐⭐"}</p>
-                        <p>Category: {place.category ?? "Activity"}</p>
-                        <p>Operating Hours: {place.operatingHours ?? "9AM-5PM"}</p>
+                        <p>Rating: {place.rating ?? "--"}</p>
+                        <p>Number of Ratings: {place.user_ratings_total ?? "--"}</p>
+                        <p>Category: {place.matched_type ?? "Activity"}</p>
+                        <p>Address: {place.address ?? "(Unavailable)"}</p>
                     </div>
                 </>
             </div>
             <h2>Reviews</h2>
-            <div className="review-box">⭐⭐⭐⭐ Great place!</div>
-            <div className="review-box">⭐⭐ Average experience.</div>
-            <div className="review-box">⭐ Not worth it!</div>
+            {place.reviews.map((review, index) => (
+                <Review
+                    key={index}
+                    text={review}
+                />
+            ))}
         </div>
     )
 }
