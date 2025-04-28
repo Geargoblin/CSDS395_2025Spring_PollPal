@@ -1,18 +1,16 @@
-# filepath: /backend/models/testMLAlgorithm.py
-
 import math
-from pymongo import MongoClient
+import random
 from collections import Counter
+from bson import ObjectId
+from pymongo import MongoClient
 
 from . import db
 from .user import get_user_by_id
 
-# Sigmoid function to convert raw score to probability
 def sigmoid(x):
     return 1 / (1 + math.exp(-x))
 
-def score_places_for_user(user_id: int):
-
+def score_places_for_user(user_id: str):
     users_col = db["Users"]
     places_col = db["Places"]
 
@@ -20,65 +18,117 @@ def score_places_for_user(user_id: int):
     if not user:
         raise ValueError("User not found")
 
-    preferences = set(user.get("preferences", []))
-    liked_place_ids = set(user.get("liked_places", []))
-    disliked_place_ids = set(user.get("disliked_places", []))
+    liked_place_ids = list(user.get("liked_places", []))  # Keep order for recency
+    disliked_place_ids = list(user.get("disliked_places", []))
 
-    liked_places = list(places_col.find({"Place ID": {"$in": list(liked_place_ids)}}))
-    disliked_places = list(places_col.find({"Place ID": {"$in": list(disliked_place_ids)}}))
+    liked_place_object_ids = []
+    for pid in liked_place_ids:
+        try:
+            liked_place_object_ids.append(ObjectId(pid))
+        except:
+            continue
 
-    liked_cat_counts = Counter([p["Restaurant Type"] for p in liked_places if "Restaurant Type" in p])
-    disliked_cat_counts = Counter([p["Restaurant Type"] for p in disliked_places if "Restaurant Type" in p])
+    disliked_place_object_ids = []
+    for pid in disliked_place_ids:
+        try:
+            disliked_place_object_ids.append(ObjectId(pid))
+        except:
+            continue
 
-    all_places = list(places_col.find())
+    liked_places = list(db["Places"].find({"_id": {"$in": liked_place_object_ids}}))
+    disliked_places = list(db["Places"].find({"_id": {"$in": disliked_place_object_ids}}))
+
+    # Map place IDs to their restaurant types
+    place_id_to_type = {}
+    for p in liked_places + disliked_places:
+        pid = str(p["_id"])
+        place_id_to_type[pid] = p.get("Restaurant Type", "Other").strip()
+
+    liked_types_ordered = []
+    for pid in liked_place_ids:
+        if pid in place_id_to_type:
+            liked_types_ordered.append(place_id_to_type[pid])
+
+    disliked_types_ordered = []
+    for pid in disliked_place_ids:
+        if pid in place_id_to_type:
+            disliked_types_ordered.append(place_id_to_type[pid])
+
+    # Recency-weighted counters
+    liked_type_weights = Counter()
+    disliked_type_weights = Counter()
+
+    for idx, rtype in enumerate(reversed(liked_types_ordered)):
+        liked_type_weights[rtype] += (len(liked_types_ordered) - idx)
+
+    for idx, rtype in enumerate(reversed(disliked_types_ordered)):
+        disliked_type_weights[rtype] += (len(disliked_types_ordered) - idx)
+
+    all_places = list(db["Places"].find())
 
     results = []
 
     for place in all_places:
         score = 0.0
 
-        place_id = place["Place ID"]
-        category = place.get("Restaurant Type", "")
-        likes = place.get("likes", 0)
-        dislikes = place.get("dislikes", 0)
+        current_place_id = str(place["_id"])
+        restaurant_type = place.get("Restaurant Type", "Other").strip()
+        likes = place.get("User Ratings Total", 0)
+        rating = place.get("Rating", 0)
 
-        # Preference boost
-        if category in preferences:
-            score += 1.0
+        # 1. Mild boost based on recent likes
+        score += liked_type_weights.get(restaurant_type, 0) * 1.1
 
-        # Normalize likes (log-scale)
-        score += math.log(likes + 1) / 8
+        # 2. Mild penalty based on recent dislikes
+        score -= disliked_type_weights.get(restaurant_type, 0) * 3.5
 
-        # Like/dislike ratio boost (Need to modify to work with ratings)
-        if (likes + dislikes) > 0:
-            ratio = likes / (likes + dislikes)
-            score += ratio
-        else:
-            score += 0
+        # 3. Quality scoring
+        if rating > 0:
+            score += rating * 1.5
 
-        # Already liked/disliked penalty
-        if place_id in liked_place_ids or place_id in disliked_place_ids:
-            score -= 60
+        if likes > 0:
+            score += math.log(likes + 1) * 1.2
 
-        # Category match with liked/disliked categories
-        liked_cat_boost = liked_cat_counts.get(category, 0) / 20.0
-        disliked_cat_penalty = disliked_cat_counts.get(category, 0) / 20.0
-        score += liked_cat_boost
-        score -= disliked_cat_penalty
+        # 4. Heavy penalty if already liked/disliked specific place
+        if current_place_id in liked_place_ids or current_place_id in disliked_place_ids:
+            score -= 100
 
-        probability = sigmoid(score)
+        # 5. Normalize
+        probability = sigmoid(score / 10.0)
 
         results.append({
-            "name": place["Name"],
-            "address": place["Address"],
-            "rating": place["Rating"],
-            "user Ratings Total": place["User Ratings Total"],
+            "name": place.get("Name", "Unknown"),
+            "address": place.get("Address", "Unknown"),
+            "rating": place.get("Rating", 0),
+            "user Ratings Total": place.get("User Ratings Total", 0),
             "price": place.get("Price", "Unknown"),
-            "restaurant type": category,
-            "google types": place["Google Types"],
+            "restaurant type": restaurant_type,
+            "google types": place.get("Google Types", []),
             "score": probability
         })
 
-    #Sorts the places and returns the first 10
+    # ------------------------------
+    # Top matches + Explore Layer (NO shuffle)
+    # ------------------------------
+
     results.sort(key=lambda x: x["score"], reverse=True)
-    return results[:10]
+
+    top_results = []
+    seen_types = set()
+
+    # Pick up to 8 top matches with unique restaurant types
+    for place in results:
+        if len(top_results) >= 8:
+            break
+        if place["restaurant type"] not in seen_types:
+            top_results.append(place)
+            seen_types.add(place["restaurant type"])
+
+    # Pick 2 random explore places from remaining
+    remaining_places = [p for p in results if p["restaurant type"] not in seen_types]
+    random_explores = random.sample(remaining_places, min(2, len(remaining_places)))
+
+    # Final results: top results first, then explore results (ordered by score)
+    final_results = top_results + sorted(random_explores, key=lambda x: x["score"], reverse=True)
+
+    return final_results
