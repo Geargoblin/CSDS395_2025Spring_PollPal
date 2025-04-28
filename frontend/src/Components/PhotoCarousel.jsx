@@ -36,7 +36,7 @@ function PhotoCarousel({ photos }) {
       >
         <img
           src={photos[currentIndex]}
-          alt="carousel"
+          alt="Failed to load image."
           style={{ width: "100%", height: "100%", objectFit: "cover" }}
         />
       </div>

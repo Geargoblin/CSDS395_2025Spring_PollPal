@@ -108,6 +108,7 @@ def score_places_for_user(user_id: str):
             "google_types": place.get("Google Types", []),
             "photos": place.get("Photos", []),
             "reviews": place.get("Reviews", []),
+            "description": place.get("Description", ""),
             "score": probability
         })
 

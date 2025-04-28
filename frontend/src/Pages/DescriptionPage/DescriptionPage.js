@@ -23,6 +23,7 @@ const DescriptionPage = (props) => {
                         <p>Category: {place.matched_type ?? "Activity"}</p>
                         <p>Address: {place.address ?? "(Unavailable)"}</p>
                     </div>
+                    <p>{place.description}</p>
                 </>
             </div>
             <h2>Reviews</h2>
