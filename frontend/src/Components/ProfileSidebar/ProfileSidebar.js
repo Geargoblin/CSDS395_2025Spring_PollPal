@@ -32,7 +32,7 @@ const ProfileSidebar = ({ user, onLogout }) => {
       <h3 className="text-xl font-semibold text-blue-600 mb-2">{user.username}</h3>
       <p className="text-sm text-gray-600 mb-4">{user.email}</p>
       <Link to="/profile" className="block text-blue-600 hover:text-blue-800 mb-2">Edit Profile</Link>
-      <Link to="/show-profile" className="text-blue-600 hover:text-blue-800"> Showe Profile</Link>
+      <Link to="/show-profile" className="text-blue-600 hover:text-blue-800"> Show Profile</Link>
       <button 
         onClick={handleLogout}
         className="w-full bg-red-600 text-white p-2 rounded-md hover:bg-red-700 transition">

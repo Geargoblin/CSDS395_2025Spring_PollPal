@@ -279,12 +279,12 @@ def like_place(place_id):
     
     try:
         # Add place to liked places
-        success = add_liked_place(session['user_id'], place_id)
+        success, error_message = add_liked_place(session['user_id'], place_id)
         
         if not success:
             return jsonify({
                 "status": "error",
-                "message": "Failed to like place"
+                "message": error_message or "Failed to like place"
             }), 400
         
         return jsonify({
@@ -310,12 +310,12 @@ def dislike_place(place_id):
     
     try:
         # Add place to disliked places
-        success = add_disliked_place(session['user_id'], place_id)
+        success, error_message = add_disliked_place(session['user_id'], place_id)
         
         if not success:
             return jsonify({
                 "status": "error",
-                "message": "Failed to dislike place"
+                "message": error_message or "Failed to dislike place"
             }), 400
         
         return jsonify({
@@ -341,12 +341,12 @@ def reset_place(place_id):
     
     try:
         # Remove place from both lists
-        success = remove_place_from_lists(session['user_id'], place_id)
+        success, error_message = remove_place_from_lists(session['user_id'], place_id)
         
         if not success:
             return jsonify({
                 "status": "error",
-                "message": "Failed to reset place status"
+                "message": error_message or "Failed to reset place status"
             }), 400
         
         return jsonify({
@@ -413,7 +413,7 @@ places = [
         "image": "https://scontent.fbkl1-1.fna.fbcdn.net/v/t39.30808-6/296404277_5842436765784617_7542443823342321004_n.jpg?_nc_cat=109&ccb=1-7&_nc_sid=cc71e4&_nc_ohc=Eam24OkVIEgQ7kNvgHPz640&_nc_oc=Adh1nzOBU2fBmwkKwkx3knwt4DehnJP8A5Sh77uXUu1Ughs7cWvtY8Zn-EvOf_70RPU&_nc_zt=23&_nc_ht=scontent.fbkl1-1.fna&_nc_gid=A8U3VraZFW4rU1-PIlitw9y&oh=00_AYGarNt-KnZSPx1u3PIE5XYaI_pKGnmMpDAjQSejtX5Eag&oe=67D0152F"
     }
 ]
-
+# ENDPOINT FOR RETRIEVING SAMPLE PLACES - Testing purposes
 @app.route('/places', methods=['GET'])
 def get_places():
     return jsonify(places)
@@ -428,7 +428,8 @@ def get_matched_places():
 
     try:
         user_id = session['user_id']
-        results = score_places_for_user(user_id)
+        category = request.args.get('category', None)
+        results = score_places_for_user(user_id, category)
         return jsonify({
             "status": "success",
             "matches": results
