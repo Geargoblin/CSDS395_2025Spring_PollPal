@@ -10,15 +10,36 @@ const PollPal = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [swipeDirection, setSwipeDirection] = useState(null);
   const [error, setError] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState("Any");
 
   useEffect(() => {
     getNextTen()
   }, []);
 
-  const getNextTen = async () => {
+  const getNextTen = async (category) => {
     setError('');
+
+    var fetch_url = ""
+    switch(category){
+      case "Restaurants":
+        fetch_url = "http://localhost:5001/api/match?category=restaurant";
+        break;
+      case "Cafes":
+        fetch_url = "http://localhost:5001/api/match?category=cafe";
+        break;
+      case "Tourist Attractions":
+        fetch_url = "http://localhost:5001/api/match?category=tourist_attraction";
+        break;
+      case "Parks":
+        fetch_url = "http://localhost:5001/api/match?category=park";
+        break;
+      default:
+        fetch_url = "http://localhost:5001/api/match"
+        break;
+    }
+
     try {
-      const url = "http://localhost:5001/api/match";
+      const url = fetch_url;
       const response = await fetch(url, {
         method: 'GET',
         headers: {
@@ -45,7 +66,7 @@ const PollPal = () => {
     setTimeout(() => {
       setCurrentIndex((prevIndex) => (prevIndex + 1) % places.length);
       if (currentIndex === 0) {
-        getNextTen();
+        getNextTen(selectedCategory);
       }
       setSwipeDirection(null);
     }, 500); // Animation duration
@@ -101,6 +122,12 @@ const PollPal = () => {
     }
   }
 
+  const handleFilter = (category) => {
+    console.log(category);
+    setSelectedCategory(category);
+    getNextTen(category);
+  }
+
   const navigate = useNavigate();
 
   // Navigate when clicking anywhere in the card
@@ -117,11 +144,14 @@ const PollPal = () => {
       <div className="w-1/4 bg-gray-100 p-6 rounded-lg shadow-md">
         <h3 className="font-semibold text-xl mb-4">Filters</h3>
         <label className="block text-lg font-medium mb-2">Category:</label>
-        <select className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <option>Restaurants</option>
-          <option>Cafes</option>
-          <option>Parks</option>
-          <option>Museums</option>
+        <select className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+          value={selectedCategory}
+          onChange={(e) => handleFilter(e.target.value)}>
+            <option>Any</option>
+            <option>Restaurants</option>
+            <option>Cafes</option>
+            <option>Parks</option>
+            <option>Tourist Attractions</option>
         </select>
       </div>
 
