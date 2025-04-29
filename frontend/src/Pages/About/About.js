@@ -14,49 +14,49 @@ const developers = [
     name: "Parv Bhardwaj",
     title: "Frontend Developer",
     image: image3,
-    description: "Your description goes here"
+    description: "pxb410@case.edu"
   },
   {
     name: "Gautam Khandige",
     title: "Backend Developer",
     image: image1,
-    description: "Your description goes here"
+    description: "gbk29@case.edu"
   },
   {
     name: "Leonardo Astorga",
     title: "Backend Developer",
     image: image2,
-    description: "Enter Description here"
+    description: "lga14@case.edu"
   },
   {
     name: "Stephen ",
     title: "Backend Developer",
     image: image4,
-    description: "Enter Description Here"
+    description: "sxy747@case.edu"
   },
   {
     name: "Michael Warner",
     title: "Frontend Developer",
     image: image5,
-    description: "Enter Description Here"
+    description: "mdw117@case.edu"
   },
   {
     name: "Tom Than",
     title: "Backend Developer",
     image: image6,
-    description: "Enter Description Here"
+    description: "ptt20@case.edu"
   },
   {
     name: "Max Zweiback",
     title: "Frontend Developer",
     image: image7,
-    description: "Enter Description Here"
+    description: "mmz34@case.edu"
   },
   {
     name: "Jacob Hall",
     title: "Backend Developer",
     image: image8,
-    description: "Enter Description Here"
+    description: "jlh277@case.edu"
   }
 ];
 
