@@ -35,7 +35,7 @@ function PhotoCarousel({ photos }) {
         }}
       >
         <img
-          src={photos[currentIndex]}
+          src={"https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=" + photos[currentIndex] + "&key=AIzaSyABr7ljK68VEpnzBFayW4tS4H6lG1bHWWg"}
           alt="Failed to load image."
           style={{ width: "100%", height: "100%", objectFit: "cover" }}
         />
