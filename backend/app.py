@@ -413,7 +413,7 @@ places = [
         "image": "https://scontent.fbkl1-1.fna.fbcdn.net/v/t39.30808-6/296404277_5842436765784617_7542443823342321004_n.jpg?_nc_cat=109&ccb=1-7&_nc_sid=cc71e4&_nc_ohc=Eam24OkVIEgQ7kNvgHPz640&_nc_oc=Adh1nzOBU2fBmwkKwkx3knwt4DehnJP8A5Sh77uXUu1Ughs7cWvtY8Zn-EvOf_70RPU&_nc_zt=23&_nc_ht=scontent.fbkl1-1.fna&_nc_gid=A8U3VraZFW4rU1-PIlitw9y&oh=00_AYGarNt-KnZSPx1u3PIE5XYaI_pKGnmMpDAjQSejtX5Eag&oe=67D0152F"
     }
 ]
-# ENDPOINT FOR RETRIEVING SAMPLE PLACES 
+# ENDPOINT FOR RETRIEVING SAMPLE PLACES - Testing purposes
 @app.route('/places', methods=['GET'])
 def get_places():
     return jsonify(places)

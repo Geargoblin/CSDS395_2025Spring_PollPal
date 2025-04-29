@@ -1,21 +1,76 @@
 openapi: "3.0.3"
 info:
   title: PollPal API
-  description: Initial API documentation for the PollPal Recommendation Application. Visualization purposes only. Also, since we are implementing a Tiktok/Tinder like app, with infinite scrolling, ignore the pagination parameters and responses for now. We will probably be using something like cursor-based pagination
-  version: "1.0.0"
+  description: Updated API documentation for the PollPal Recommendation Application. Based on current Flask implementation.
+  version: "1.0.1"
 servers:
   - url: http://api.pollpal.com
+  - url: http://localhost:5001
 tags:
   - name: Authentication
-    description: Endpoints related to user registration, login, password resets, and logout.
+    description: Endpoints related to user registration, login, logout, and current user data.
   - name: Profile
-    description: Endpoints to get and update user profile data, activity history, and friends list.
-  - name: Posts
-    description: Endpoints for post recommendations, details, voting, and trending posts.
-  - name: Reviews
-    description: Endpoints for creating, updating, and deleting reviews.
+    description: Endpoints to update user profile data.
+  - name: Places
+    description: Endpoints for place recommendations, liking/disliking places, and sample place data.
 paths:
-  /auth/register:
+  /:
+    get:
+      summary: Home Page
+      description: Welcome message to verify the API is running.
+      responses:
+        '200':
+          description: Welcome message.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: "Welcome to PollPal Backend"
+
+  /api/db-test:
+    get:
+      summary: Database Connection Test
+      description: Tests the connection to MongoDB and returns available collections.
+      responses:
+        '200':
+          description: Connection successful.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+                  collections:
+                    type: array
+                    items:
+                      type: string
+              example:
+                status: "success"
+                message: "Connected to MongoDB!"
+                collections: ["users", "places"]
+        '500':
+          description: Connection error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+              example:
+                status: "error"
+                message: "Failed to connect to MongoDB: <error details>"
+
+  /api/auth/register:
     post:
       tags:
         - Authentication
@@ -34,51 +89,86 @@ paths:
                   type: string
                 password:
                   type: string
+                date_of_birth:
+                  type: string
+                  format: date
+                phone_number:
+                  type: string
+                preferences:
+                  type: array
+                  items:
+                    type: string
                 location:
                   type: string
               required:
                 - username
                 - email
                 - password
-                - location
             example:
               username: "john_doe"
               email: "john@example.com"
               password: "securepassword"
-              location: "New York"
+              date_of_birth: "1990-01-01"
+              phone_number: "555-123-4567"
+              preferences: ["Food", "Music", "Art"]
+              location: "Cleveland"
       responses:
-        '200':
+        '201':
           description: User registered successfully.
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
+                  status:
+                    type: string
                   message:
                     type: string
-                  user_id:
-                    type: string
+                  user:
+                    $ref: "#/components/schemas/UserResponse"
               example:
-                success: true
+                status: "success"
                 message: "User registered successfully"
-                user_id: "abc123"
+                user:
+                  id: "648a9d1a0c5d7b2a1e3f4g5h"
+                  username: "john_doe"
+                  email: "john@example.com"
+                  preferences: ["Food", "Music", "Art"]
+                  location: "Cleveland"
+                  liked_places: []
+                  disliked_places: []
+                  date_of_birth: "1990-01-01"
+                  phone_number: "555-123-4567"
         '400':
-          description: Registration error (username/email already exists or invalid input).
+          description: Registration error (missing fields or validation error).
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
+                  status:
+                    type: string
                   message:
                     type: string
               example:
-                success: false
-                message: "Username/email already exists"
-  /auth/login:
+                status: "error"
+                message: "Missing required fields"
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+              example:
+                status: "error"
+                message: "Registration failed: <error details>"
+
+  /api/auth/login:
     post:
       tags:
         - Authentication
@@ -109,16 +199,25 @@ paths:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
+                  status:
+                    type: string
                   message:
                     type: string
-                  user_id:
-                    type: string
+                  user:
+                    $ref: "#/components/schemas/UserResponse"
               example:
-                success: true
+                status: "success"
                 message: "Login successful"
-                user_id: "abc123"
+                user:
+                  id: "648a9d1a0c5d7b2a1e3f4g5h"
+                  username: "john_doe"
+                  email: "john@example.com"
+                  preferences: ["Food", "Music", "Art"]
+                  location: "Cleveland"
+                  liked_places: []
+                  disliked_places: []
+                  date_of_birth: "1990-01-01"
+                  phone_number: "555-123-4567"
         '401':
           description: Invalid credentials.
           content:
@@ -126,13 +225,13 @@ paths:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
+                  status:
+                    type: string
                   message:
                     type: string
               example:
-                success: false
-                message: "Invalid credentials"
+                status: "error"
+                message: "Invalid username or password"
         '400':
           description: Missing required fields.
           content:
@@ -140,128 +239,29 @@ paths:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
+                  status:
+                    type: string
                   message:
                     type: string
               example:
-                success: false
-                message: "Missing required fields"
-  /auth/reset-password-request:
-    post:
-      tags:
-        - Authentication
-      summary: Password Reset Request
-      description: Send password reset email to user.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                email:
-                  type: string
-              required:
-                - email
-            example:
-              email: "john@example.com"
-      responses:
-        '200':
-          description: Password reset instructions sent.
+                status: "error"
+                message: "Username and password are required"
+        '500':
+          description: Server error.
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
+                  status:
+                    type: string
                   message:
                     type: string
               example:
-                success: true
-                message: "Password reset instructions sent"
-        '404':
-          description: Email not found.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  message:
-                    type: string
-              example:
-                success: false
-                message: "Email not found"
-        '400':
-          description: Invalid email format.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  message:
-                    type: string
-              example:
-                success: false
-                message: "Invalid email format"
-  /auth/reset-password:
-    post:
-      tags:
-        - Authentication
-      summary: Password Reset
-      description: Reset user password using a token.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                token:
-                  type: string
-                new_password:
-                  type: string
-              required:
-                - token
-                - new_password
-            example:
-              token: "reset-token-123"
-              new_password: "newsecurepassword"
-      responses:
-        '200':
-          description: Password reset successful.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  message:
-                    type: string
-              example:
-                success: true
-                message: "Password reset successful"
-        '400':
-          description: Invalid or expired token or password requirements not met.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  message:
-                    type: string
-              example:
-                success: false
-                message: "Invalid or expired token"
-  /auth/logout:
+                status: "error"
+                message: "Login failed: <error details>"
+
+  /api/auth/logout:
     post:
       tags:
         - Authentication
@@ -275,56 +275,79 @@ paths:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
+                  status:
+                    type: string
                   message:
                     type: string
               example:
-                success: true
+                status: "success"
                 message: "Logged out successfully"
-  /profile:
+
+  /api/auth/me:
     get:
       tags:
-        - Profile
-      summary: Get User Profile
-      description: Retrieve the current user's profile information.
+        - Authentication
+      summary: Get Current User
+      description: Retrieve the current authenticated user's information.
       responses:
         '200':
-          description: Profile retrieved successfully.
+          description: User information retrieved successfully.
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  user_id:
+                  status:
                     type: string
-                  username:
+                  user:
+                    $ref: "#/components/schemas/UserResponse"
+              example:
+                status: "success"
+                user:
+                  id: "648a9d1a0c5d7b2a1e3f4g5h"
+                  username: "john_doe"
+                  email: "john@example.com"
+                  preferences: ["Food", "Music", "Art"]
+                  location: "Cleveland"
+                  liked_places: []
+                  disliked_places: []
+                  date_of_birth: "1990-01-01"
+                  phone_number: "555-123-4567"
+        '401':
+          description: User not authenticated.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
                     type: string
-                  email:
-                    type: string
-                  location:
-                    type: string
-                  created_at:
-                    type: string
-                    format: date-time
-                  profile_picture:
+                  message:
                     type: string
               example:
-                user_id: "abc123"
-                username: "john_doe"
-                email: "john@example.com"
-                location: "New York"
-                created_at: "2025-01-01T12:00:00Z"
-                profile_picture: "http://example.com/profile.jpg"
-        '401':
-          description: Unauthorized.
-        '404':
-          description: Profile not found.
+                status: "error"
+                message: "Not authenticated"
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+              example:
+                status: "error"
+                message: "Error retrieving user data: <error details>"
+
+  /api/user/update:
     put:
       tags:
         - Profile
-      summary: Update Profile
-      description: Update user profile information.
+      summary: Update User Information
+      description: Update current user's profile information.
       requestBody:
         required: true
         content:
@@ -336,749 +359,432 @@ paths:
                   type: string
                 email:
                   type: string
+                password:
+                  type: string
+                date_of_birth:
+                  type: string
+                  format: date
+                phone_number:
+                  type: string
+                preferences:
+                  type: array
+                  items:
+                    type: string
                 location:
                   type: string
-                profile_picture:
-                  type: string
             example:
-              username: "john_doe_updated"
-              email: "john_new@example.com"
-              location: "Boston"
-              profile_picture: "http://example.com/new_profile.jpg"
+              username: "john_updated"
+              email: "john_updated@example.com"
+              preferences: ["Food", "Music", "Art", "Sports"]
+              location: "Columbus"
       responses:
         '200':
-          description: Profile updated successfully.
+          description: User information updated successfully.
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
+                  status:
+                    type: string
                   message:
                     type: string
-                  profile:
-                    type: object
+                  user:
+                    $ref: "#/components/schemas/UserResponse"
               example:
-                success: true
-                message: "Profile updated successfully"
-                profile:
-                  user_id: "abc123"
-                  username: "john_doe_updated"
-                  email: "john_new@example.com"
-                  location: "Boston"
+                status: "success"
+                message: "User information updated successfully"
+                user:
+                  id: "648a9d1a0c5d7b2a1e3f4g5h"
+                  username: "john_updated"
+                  email: "john_updated@example.com"
+                  preferences: ["Food", "Music", "Art", "Sports"]
+                  location: "Columbus"
+                  liked_places: []
+                  disliked_places: []
+                  date_of_birth: "1990-01-01"
+                  phone_number: "555-123-4567"
         '401':
-          description: Unauthorized.
+          description: User not authenticated.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+              example:
+                status: "error"
+                message: "Not authenticated"
         '400':
           description: Invalid input.
-  /profile/activity:
-    get:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+              example:
+                status: "error"
+                message: "Failed to update user information"
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+              example:
+                status: "error"
+                message: "Error updating user information: <error details>"
+
+  /api/user/places/like/{place_id}:
+    post:
       tags:
-        - Profile
-      summary: Get User Activity History
-      description: Retrieve the user's like/dislike history and reviews.
+        - Places
+      summary: Like a Place
+      description: Add a place to the user's liked places list.
       parameters:
-        - in: query
-          name: type
+        - in: path
+          name: place_id
+          required: true
           schema:
             type: string
-            enum: [likes, dislikes, reviews, all]
-          description: Filter by type of activity.
-        - in: query
-          name: page
-          schema:
-            type: integer
-          description: Page number for pagination.
-        - in: query
-          name: limit
-          schema:
-            type: integer
-          description: Items per page.
+          description: The ID of the place to like.
       responses:
         '200':
-          description: Activity history retrieved successfully.
+          description: Place added to liked places successfully.
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  likes:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        post_id:
-                          type: string
-                        post_name:
-                          type: string
-                        timestamp:
-                          type: string
-                          format: date-time
-                  dislikes:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        post_id:
-                          type: string
-                        post_name:
-                          type: string
-                        timestamp:
-                          type: string
-                          format: date-time
-                  reviews:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        post_id:
-                          type: string
-                        post_name:
-                          type: string
-                        review_content:
-                          type: string
-                        rating:
-                          type: number
-                        timestamp:
-                          type: string
-                          format: date-time
-                  pagination:
-                    type: object
-                    properties:
-                      total:
-                        type: integer
-                      page:
-                        type: integer
-                      limit:
-                        type: integer
-                      total_pages:
-                        type: integer
+                  status:
+                    type: string
+                  message:
+                    type: string
               example:
-                likes:
-                  - post_id: "p1"
-                    post_name: "Post One"
-                    timestamp: "2025-01-02T12:00:00Z"
-                dislikes: []
-                reviews:
-                  - post_id: "p2"
-                    post_name: "Post Two"
-                    review_content: "Great post!"
-                    rating: 5
-                    timestamp: "2025-01-03T12:00:00Z"
-                pagination:
-                  total: 10
-                  page: 1
-                  limit: 5
-                  total_pages: 2
+                status: "success"
+                message: "Place added to liked places"
         '401':
-          description: Unauthorized.
+          description: User not authenticated.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+              example:
+                status: "error"
+                message: "Not authenticated"
         '400':
-          description: Invalid parameters.
-  /profile/friends:
-    get:
-      tags:
-        - Profile
-      summary: Get Friends List
-      description: Retrieve the user's friends list.
-      parameters:
-        - in: query
-          name: page
-          schema:
-            type: integer
-          description: Page number for pagination.
-        - in: query
-          name: limit
-          schema:
-            type: integer
-          description: Items per page.
-      responses:
-        '200':
-          description: Friends list retrieved successfully.
+          description: Invalid place ID or already liked.
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  friends:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        user_id:
-                          type: string
-                        username:
-                          type: string
-                        profile_picture:
-                          type: string
-                  pagination:
-                    type: object
-                    properties:
-                      total:
-                        type: integer
-                      page:
-                        type: integer
-                      limit:
-                        type: integer
-                      total_pages:
-                        type: integer
+                  status:
+                    type: string
+                  message:
+                    type: string
               example:
-                friends:
-                  - user_id: "u1"
-                    username: "friend1"
-                    profile_picture: "http://example.com/friend1.jpg"
-                pagination:
-                  total: 5
-                  page: 1
-                  limit: 5
-                  total_pages: 1
+                status: "error"
+                message: "Failed to like place"
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+              example:
+                status: "error"
+                message: "Error liking place: <error details>"
+
+  /api/user/places/dislike/{place_id}:
+    post:
+      tags:
+        - Places
+      summary: Dislike a Place
+      description: Add a place to the user's disliked places list.
+      parameters:
+        - in: path
+          name: place_id
+          required: true
+          schema:
+            type: string
+          description: The ID of the place to dislike.
+      responses:
+        '200':
+          description: Place added to disliked places successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+              example:
+                status: "success"
+                message: "Place added to disliked places"
         '401':
-          description: Unauthorized.
-  /posts/recommendations:
+          description: User not authenticated.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+              example:
+                status: "error"
+                message: "Not authenticated"
+        '400':
+          description: Invalid place ID or already disliked.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+              example:
+                status: "error"
+                message: "Failed to dislike place"
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+              example:
+                status: "error"
+                message: "Error disliking place: <error details>"
+
+  /api/user/places/reset/{place_id}:
+    post:
+      tags:
+        - Places
+      summary: Reset Place Status
+      description: Remove a place from both liked and disliked places lists.
+      parameters:
+        - in: path
+          name: place_id
+          required: true
+          schema:
+            type: string
+          description: The ID of the place to reset.
+      responses:
+        '200':
+          description: Place reset successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+              example:
+                status: "success"
+                message: "Place removed from liked/disliked places"
+        '401':
+          description: User not authenticated.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+              example:
+                status: "error"
+                message: "Not authenticated"
+        '400':
+          description: Invalid place ID or not in lists.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+              example:
+                status: "error"
+                message: "Failed to reset place status"
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+              example:
+                status: "error"
+                message: "Error resetting place status: <error details>"
+
+  /places:
     get:
       tags:
-        - Posts
-      summary: Get Post Recommendations
-      description: Fetch personalized post recommendations.
+        - Places
+      summary: Get Sample Places
+      description: Retrieve a list of sample places for testing purposes.
+      responses:
+        '200':
+          description: List of sample places.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PlaceSample"
+              example:
+                - name: "Rock & Roll Hall of Fame"
+                  description: "A museum dedicated to preserving the history of rock music."
+                  image: "https://example.com/rock-hall.jpg"
+                - name: "West Side Market"
+                  description: "Historic public market with fresh produce and artisanal foods."
+                  image: "https://example.com/west-side-market.jpg"
+
+  /api/match:
+    get:
+      tags:
+        - Places
+      summary: Get Matched Places
+      description: Get personalized place recommendations based on user preferences and past interactions.
       parameters:
         - in: query
           name: category
           schema:
             type: string
-          description: Filter by category.
-        - in: query
-          name: limit
-          schema:
-            type: integer
-          description: Number of recommendations to return.
+          description: Filter recommendations by category.
       responses:
         '200':
-          description: Recommendations retrieved successfully.
+          description: Matched places retrieved successfully.
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  posts:
+                  status:
+                    type: string
+                  matches:
                     type: array
                     items:
                       type: object
-                      properties:
-                        post_id:
-                          type: string
-                        name:
-                          type: string
-                        description:
-                          type: string
-                        photos:
-                          type: array
-                          items:
-                            type: string
-                        main_photo:
-                          type: string
-                        stars:
-                          type: number
-                        likes_count:
-                          type: number
-                        dislikes_count:
-                          type: number
-                        category:
-                          type: string
-                        location:
-                          type: object
-                          properties:
-                            address:
-                              type: string
-                            coordinates:
-                              type: array
-                              items:
-                                type: number
-                        preview_reviews:
-                          type: array
-                          items:
-                            type: object
-                            properties:
-                              user_id:
-                                type: string
-                              username:
-                                type: string
-                              content:
-                                type: string
-                              rating:
-                                type: number
               example:
-                posts:
-                  - post_id: "p1"
-                    name: "Post One"
-                    description: "A great place."
-                    photos: ["http://example.com/photo1.jpg"]
-                    main_photo: "http://example.com/photo1.jpg"
-                    stars: 4.5
-                    likes_count: 100
-                    dislikes_count: 5
-                    category: "Food"
-                    location:
-                      address: "123 Main St"
-                      coordinates: [-73.935242, 40.730610]
-                    preview_reviews:
-                      - user_id: "u1"
-                        username: "reviewer1"
-                        content: "Loved it!"
-                        rating: 5
+                status: "success"
+                matches: [
+                  {
+                    "id": "place1",
+                    "name": "Rock & Roll Hall of Fame",
+                    "score": 0.95,
+                    "category": "Music"
+                  }
+                ]
         '401':
-          description: Unauthorized.
-        '400':
-          description: Invalid parameters.
-  /posts/{post_id}:
-    get:
-      tags:
-        - Posts
-      summary: Get Post Details
-      description: Retrieve detailed information about a specific post.
-      parameters:
-        - in: path
-          name: post_id
-          required: true
-          schema:
-            type: string
-          description: The ID of the post.
-      responses:
-        '200':
-          description: Post details retrieved successfully.
+          description: User not authenticated.
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  post_id:
+                  status:
                     type: string
-                  name:
-                    type: string
-                  description:
-                    type: string
-                  photos:
-                    type: array
-                    items:
-                      type: string
-                  stars:
-                    type: number
-                  likes_count:
-                    type: number
-                  dislikes_count:
-                    type: number
-                  category:
-                    type: string
-                  tags:
-                    type: array
-                    items:
-                      type: string
-                  location:
-                    type: object
-                    properties:
-                      address:
-                        type: string
-                      coordinates:
-                        type: array
-                        items:
-                          type: number
-                      distance:
-                        type: number
-                  reviews:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        review_id:
-                          type: string
-                        user_id:
-                          type: string
-                        username:
-                          type: string
-                        profile_picture:
-                          type: string
-                        content:
-                          type: string
-                        rating:
-                          type: number
-                        timestamp:
-                          type: string
-                          format: date-time
-                  user_interaction:
-                    type: object
-                    properties:
-                      liked:
-                        type: boolean
-                      disliked:
-                        type: boolean
-                      reviewed:
-                        type: boolean
-              example:
-                post_id: "p1"
-                name: "Post One"
-                description: "A great place."
-                photos: ["http://example.com/photo1.jpg"]
-                stars: 4.5
-                likes_count: 100
-                dislikes_count: 5
-                category: "Food"
-                tags: ["restaurant", "cozy"]
-                location:
-                  address: "123 Main St"
-                  coordinates: [-73.935242, 40.730610]
-                  distance: 2.5
-                reviews:
-                  - review_id: "r1"
-                    user_id: "u1"
-                    username: "reviewer1"
-                    profile_picture: "http://example.com/profile.jpg"
-                    content: "Loved it!"
-                    rating: 5
-                    timestamp: "2025-01-03T12:00:00Z"
-                user_interaction:
-                  liked: true
-                  disliked: false
-                  reviewed: true
-        '404':
-          description: Post not found.
-        '400':
-          description: Invalid post ID.
-  /posts/{post_id}/vote:
-    post:
-      tags:
-        - Posts
-      summary: Like/Dislike Post
-      description: Register a user vote (like/dislike) for a post.
-      parameters:
-        - in: path
-          name: post_id
-          required: true
-          schema:
-            type: string
-          description: The ID of the post.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                vote:
-                  type: string
-                  enum: [like, dislike]
-              required:
-                - vote
-            example:
-              vote: "like"
-      responses:
-        '200':
-          description: Vote recorded successfully.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  message:
-                    type: string
-                  next_post:
-                    type: object
-              example:
-                success: true
-                message: "Vote recorded"
-                next_post:
-                  post_id: "p2"
-        '401':
-          description: Unauthorized.
-        '404':
-          description: Post not found.
-        '400':
-          description: Invalid vote type.
-  /posts/trending:
-    get:
-      tags:
-        - Posts
-      summary: Get Trending Posts
-      description: Retrieve trending posts based on user interactions.
-      parameters:
-        - in: query
-          name: category
-          schema:
-            type: string
-          description: Filter by category.
-        - in: query
-          name: page
-          schema:
-            type: integer
-          description: Page number for pagination.
-        - in: query
-          name: limit
-          schema:
-            type: integer
-          description: Items per page.
-      responses:
-        '200':
-          description: Trending posts retrieved successfully.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  posts:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        post_id:
-                          type: string
-                        name:
-                          type: string
-                        description:
-                          type: string
-                        main_photo:
-                          type: string
-                        stars:
-                          type: number
-                        likes_count:
-                          type: number
-                        category:
-                          type: string
-                        trending_factor:
-                          type: number
-                  pagination:
-                    type: object
-                    properties:
-                      total:
-                        type: integer
-                      page:
-                        type: integer
-                      limit:
-                        type: integer
-                      total_pages:
-                        type: integer
-              example:
-                posts:
-                  - post_id: "p1"
-                    name: "Post One"
-                    description: "A great place."
-                    main_photo: "http://example.com/photo1.jpg"
-                    stars: 4.5
-                    likes_count: 100
-                    category: "Food"
-                    trending_factor: 75
-                pagination:
-                  total: 10
-                  page: 1
-                  limit: 5
-                  total_pages: 2
-        '400':
-          description: Invalid parameters.
-  /reviews:
-    post:
-      tags:
-        - Reviews
-      summary: Create Review
-      description: Create a new review for a post.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                post_id:
-                  type: string
-                content:
-                  type: string
-                rating:
-                  type: number
-              required:
-                - post_id
-                - content
-                - rating
-            example:
-              post_id: "p1"
-              content: "Amazing post!"
-              rating: 5
-      responses:
-        '200':
-          description: Review created successfully.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  message:
-                    type: string
-                  review_id:
-                    type: string
-              example:
-                success: true
-                message: "Review created successfully"
-                review_id: "r1"
-        '401':
-          description: Unauthorized.
-        '404':
-          description: Post not found.
-        '400':
-          description: Invalid rating or missing content.
-  /reviews/{review_id}:
-    put:
-      tags:
-        - Reviews
-      summary: Update Review
-      description: Update an existing review.
-      parameters:
-        - in: path
-          name: review_id
-          required: true
-          schema:
-            type: string
-          description: The ID of the review.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                content:
-                  type: string
-                rating:
-                  type: number
-            example:
-              content: "Updated review content"
-              rating: 4
-      responses:
-        '200':
-          description: Review updated successfully.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
                   message:
                     type: string
               example:
-                success: true
-                message: "Review updated successfully"
-        '401':
-          description: Unauthorized.
-        '404':
-          description: Review not found.
-        '403':
-          description: Not user's review.
-        '400':
-          description: Invalid rating.
-    delete:
-      tags:
-        - Reviews
-      summary: Delete Review
-      description: Delete a review.
-      parameters:
-        - in: path
-          name: review_id
-          required: true
-          schema:
-            type: string
-          description: The ID of the review.
-      responses:
-        '200':
-          description: Review deleted successfully.
+                status: "error"
+                message: "Not authenticated"
+        '500':
+          description: Server error.
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
+                  status:
+                    type: string
                   message:
                     type: string
               example:
-                success: true
-                message: "Review deleted successfully"
-        '401':
-          description: Unauthorized.
-        '404':
-          description: Review not found.
-        '403':
-          description: Not user's review.
+                status: "error"
+                message: "Failed to calculate matches: <error details>"
+
 components:
   schemas:
-    User:
+    UserResponse:
       type: object
       properties:
-        user_id:
+        id:
           type: string
         username:
           type: string
         email:
           type: string
+        preferences:
+          type: array
+          items:
+            type: string
         location:
           type: string
-        created_at:
+        liked_places:
+          type: array
+          items:
+            type: string
+        disliked_places:
+          type: array
+          items:
+            type: string
+        date_of_birth:
           type: string
-          format: date-time
-        profile_picture:
+          format: date
+        phone_number:
           type: string
-    Post:
+    
+    PlaceSample:
       type: object
       properties:
-        post_id:
-          type: string
         name:
           type: string
         description:
           type: string
-        photos:
-          type: array
-          items:
-            type: string
-        main_photo:
+        image:
           type: string
-        stars:
-          type: number
-        likes_count:
-          type: number
-        dislikes_count:
-          type: number
-        category:
-          type: string
-        location:
-          type: object
-          properties:
-            address:
-              type: string
-            coordinates:
-              type: array
-              items:
-                type: number
-        tags:
-          type: array
-          items:
-            type: string
-        reviews:
-          type: array
-          items:
-            $ref: "#/components/schemas/Review"
-    Review:
-      type: object
-      properties:
-        review_id:
-          type: string
-        user_id:
-          type: string
-        username:
-          type: string
-        profile_picture:
-          type: string
-        content:
-          type: string
-        rating:
-          type: number
-        timestamp:
-          type: string
-          format: date-time
