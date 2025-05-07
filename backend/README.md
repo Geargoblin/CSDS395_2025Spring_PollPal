@@ -41,4 +41,12 @@ pip install -r requirements.txt
 ```bash
 python app.py
 ```
+
+## Contributors
+
+- Leonardo Astorga - Recommendation System Implementation
+  - Implemented Q-learning based recommendation system
+  - Developed data preprocessing pipeline
+  - Created reward calculation mechanism
+  - Set up experimental framework for recommendation algorithms
 ```
