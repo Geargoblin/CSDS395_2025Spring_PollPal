@@ -41,4 +41,17 @@ pip install -r requirements.txt
 ```bash
 python app.py
 ```
+
+## Features
+
+### Recommendation System (feature/recommendation-system branch)
+The backend includes a Q-learning based recommendation system that:
+- Learns from user interactions (swipes, attendance)
+- Provides personalized event recommendations
+- Adapts to user preferences over time
+- Uses reinforcement learning to improve suggestions
+
+To use the recommendation system, switch to the feature branch:
+```bash
+git checkout feature/recommendation-system
 ```
