@@ -1,5 +1,5 @@
 # CSDS395_2025Spring_PollPal
-Repo for the CWRU CSDS Senior Project
+Repo for the CWRU CSDS Senior Project for Group 7
 
 How to work with the frontend?
 Step 1: Clone the repo using git or Github Desktop
