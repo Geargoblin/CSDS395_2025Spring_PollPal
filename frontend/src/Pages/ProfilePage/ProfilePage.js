@@ -10,7 +10,7 @@ const ProfilePage = () => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const response = await fetch('http://localhost:5001/api/auth/me', {
+        const response = await fetch('https://csds395-2025spring-pollpal.onrender.com/api/auth/me', {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',

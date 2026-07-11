@@ -8,7 +8,7 @@ const ProfileSidebar = ({ user, onLogout }) => {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/auth/logout', {
+      const response = await fetch('https://csds395-2025spring-pollpal.onrender.com/api/auth/logout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

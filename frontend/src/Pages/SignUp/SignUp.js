@@ -38,7 +38,7 @@ const SignUp = ({onLogin}) => {
     e.preventDefault();
   
     try {
-      const response = await fetch('http://localhost:5001/api/auth/register', {
+      const response = await fetch('https://csds395-2025spring-pollpal.onrender.com/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

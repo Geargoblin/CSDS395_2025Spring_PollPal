@@ -22,19 +22,19 @@ const PollPal = () => {
     var fetch_url = ""
     switch(category){
       case "Restaurants":
-        fetch_url = "http://localhost:5001/api/match?category=restaurant";
+        fetch_url = "https://csds395-2025spring-pollpal.onrender.com/api/match?category=restaurant";
         break;
       case "Cafes":
-        fetch_url = "http://localhost:5001/api/match?category=cafe";
+        fetch_url = "https://csds395-2025spring-pollpal.onrender.com/api/match?category=cafe";
         break;
       case "Tourist Attractions":
-        fetch_url = "http://localhost:5001/api/match?category=tourist_attraction";
+        fetch_url = "https://csds395-2025spring-pollpal.onrender.com/api/match?category=tourist_attraction";
         break;
       case "Parks":
-        fetch_url = "http://localhost:5001/api/match?category=park";
+        fetch_url = "https://csds395-2025spring-pollpal.onrender.com/api/match?category=park";
         break;
       default:
-        fetch_url = "http://localhost:5001/api/match"
+        fetch_url = "https://csds395-2025spring-pollpal.onrender.com/api/match"
         break;
     }
 
@@ -75,7 +75,7 @@ const PollPal = () => {
   const handleLike = async () => {
     setError('');
     try {
-      const url = "http://localhost:5001/api/user/places/like/" + places[currentIndex].id
+      const url = "https://csds395-2025spring-pollpal.onrender.com/api/user/places/like/" + places[currentIndex].id
       const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -100,7 +100,7 @@ const PollPal = () => {
   const handleDislike = async () => {
     setError('');
     try {
-      const url = "http://localhost:5001/api/user/places/dislike/" + places[currentIndex].id
+      const url = "https://csds395-2025spring-pollpal.onrender.com/user/places/dislike/" + places[currentIndex].id
       const response = await fetch(url, {
         method: 'POST',
         headers: {

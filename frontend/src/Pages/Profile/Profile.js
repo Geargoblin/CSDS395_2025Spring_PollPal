@@ -29,7 +29,7 @@ const Profile = ({ user, onUpdate }) => {
   const updateProfile = async (e) => {
     e.preventDefault()
 
-    const response = await fetch('http://localhost:5001/api/user/update', {
+    const response = await fetch('https://csds395-2025spring-pollpal.onrender.com/api/user/update', {
       method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

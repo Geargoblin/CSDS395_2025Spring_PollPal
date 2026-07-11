@@ -8,6 +8,7 @@ from models.user import (
 )
 from models.testMLAlgorithm import score_places_for_user
 import config
+import os
 from datetime import datetime
 from bson import ObjectId
 
@@ -441,4 +442,5 @@ def get_matched_places():
         }), 500
 
 if __name__ == '__main__':
-    app.run(port=5001, debug=app.config['DEBUG']) 
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port) 
